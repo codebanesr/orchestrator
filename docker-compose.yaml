@@ -1,0 +1,35 @@
+services:
+  orchestrator:
+    build: .
+    ports:
+      - "8090:8090"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.orchestrator.rule=PathPrefix(`/orchestrator`)"
+      - "traefik.http.routers.orchestrator.entrypoints=web"
+      - "traefik.http.services.orchestrator.loadbalancer.server.port=8090"
+      - "traefik.docker.network=shanur"
+    networks:
+      - shanur
+
+  traefik:
+    image: traefik:v3.3
+    labels:
+      - "traefik.docker.network=shanur"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - shanur
+
+networks:
+  shanur:
+    driver: bridge
