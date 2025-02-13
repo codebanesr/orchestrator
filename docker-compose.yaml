@@ -7,6 +7,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.orchestrator.service=orchestrator"
       - "traefik.http.routers.orchestrator.rule=PathPrefix(`/orchestrator`)"
       - "traefik.http.routers.orchestrator.entrypoints=web"
       - "traefik.http.services.orchestrator.loadbalancer.server.port=8090"
