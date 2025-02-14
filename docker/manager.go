@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"sync"
 
 	"bytes"
 	"encoding/json"
@@ -19,12 +20,28 @@ import (
 	"github.com/shanurrahman/orchestrator/utils"
 )
 
-type DockerManager struct {
-    cli     *client.Client
-    cfg     *config.Config
-    network string // Fabio network name
+// Add these types at the top with other types
+type ContainerStatus struct {
+    Status      string `json:"status"`
+    Message     string `json:"message"`
+    Endpoints   *ContainerEndpoints `json:"endpoints,omitempty"`
+    Error       string `json:"error,omitempty"`
 }
 
+type containerStatusMap struct {
+    sync.RWMutex
+    statuses map[string]*ContainerStatus
+}
+
+// Add this to DockerManager struct
+type DockerManager struct {
+    cli            *client.Client
+    cfg            *config.Config
+    network        string
+    containerStats containerStatusMap
+}
+
+// Update NewDockerManager
 func NewDockerManager(cfg *config.Config) *DockerManager {
     cli, err := client.NewClientWithOpts(client.FromEnv)
     if err != nil {
@@ -36,7 +53,62 @@ func NewDockerManager(cfg *config.Config) *DockerManager {
         cli:     cli,
         cfg:     cfg,
         network: "fabio_network",
+        containerStats: containerStatusMap{
+            statuses: make(map[string]*ContainerStatus),
+        },
     }
+}
+
+// Add these new methods
+func (dm *DockerManager) GetContainerStatus(id string) *ContainerStatus {
+    dm.containerStats.RLock()
+    defer dm.containerStats.RUnlock()
+    return dm.containerStats.statuses[id]
+}
+
+func (dm *DockerManager) CreateContainerAsync() (string, error) {
+    containerID := utils.GenerateID()
+    shortID := containerID[:12]
+
+    // Initialize status
+    dm.containerStats.Lock()
+    dm.containerStats.statuses[shortID] = &ContainerStatus{
+        Status:  "initializing",
+        Message: "Starting container creation",
+    }
+    dm.containerStats.Unlock()
+
+    // Start async container creation
+    go dm.handleContainerCreation(shortID)
+
+    return shortID, nil
+}
+
+func (dm *DockerManager) handleContainerCreation(shortID string) {
+    updateStatus := func(status, message string, err error) {
+        dm.containerStats.Lock()
+        defer dm.containerStats.Unlock()
+        
+        if s, exists := dm.containerStats.statuses[shortID]; exists {
+            s.Status = status
+            s.Message = message
+            if err != nil {
+                s.Error = err.Error()
+            }
+        }
+    }
+
+    // Create container using existing logic
+    endpoints, err := dm.CreateContainer()
+    if err != nil {
+        updateStatus("failed", "Container creation failed", err)
+        return
+    }
+
+    updateStatus("ready", "Container is ready", nil)
+    dm.containerStats.Lock()
+    dm.containerStats.statuses[shortID].Endpoints = endpoints
+    dm.containerStats.Unlock()
 }
 
 type ConsulServiceRegistration struct {
