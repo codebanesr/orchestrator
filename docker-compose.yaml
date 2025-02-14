@@ -1,4 +1,3 @@
-version: '3'
 services:
   consul:
     image: hashicorp/consul
@@ -23,6 +22,8 @@ services:
       - "8090"
     environment:
       - CONSUL_HTTP_ADDR=consul:8500
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - consul
       - fabio

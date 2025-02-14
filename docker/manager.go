@@ -12,6 +12,7 @@ import (
 	"net/url"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/shanurrahman/orchestrator/config"
@@ -107,10 +108,43 @@ type ContainerEndpoints struct {
 }
 
 // Modify the CreateContainer function signature and return
+func (dm *DockerManager) ensureImageExists(imageName string) error {
+    // Check if image exists locally
+    _, _, err := dm.cli.ImageInspectWithRaw(context.Background(), imageName)
+    if err == nil {
+        // Image exists locally
+        return nil
+    }
+
+    // Pull the image
+    log.Printf("Pulling image: %s", imageName)
+    reader, err := dm.cli.ImagePull(context.Background(), imageName, image.PullOptions{
+        All: false,
+    })
+    if err != nil {
+        return fmt.Errorf("failed to pull image: %v", err)
+    }
+    defer reader.Close()
+
+    // Wait for the pull to complete
+    _, err = io.Copy(io.Discard, reader)
+    if err != nil {
+        return fmt.Errorf("error while pulling image: %v", err)
+    }
+
+    return nil
+}
+
 func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
     containerID := utils.GenerateID()
     shortID := containerID[:12]
     log.Printf("Creating new container with ID: %s", shortID)
+
+    // Ensure image exists before creating container
+    imageName := "shanurcsenitap/vnc_chrome_debug:latest"
+    if err := dm.ensureImageExists(imageName); err != nil {
+        return nil, err
+    }
 
     hostConfig := &container.HostConfig{
         PortBindings: nat.PortMap{
