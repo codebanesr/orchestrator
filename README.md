@@ -113,7 +113,7 @@ View the complete [docker-compose.yaml](docker-compose.yaml) for detailed config
 ### 3. Create Browser Instance
 
 ```bash
-curl -X POST http://localhost:8090/containers
+curl -X POST http://localhost:8090/orchestrator/containers
 ```
 
 View the complete [API Documentation](docs/swagger.yaml) for all endpoints.
