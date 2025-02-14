@@ -2,6 +2,14 @@
 
 A powerful, scalable container orchestration service that provides on-demand isolated Chrome browser instances. Built with Docker, Consul, and Fabio, it offers enterprise-grade browser automation and streaming capabilities.
 
+Inspired by [neko](https://github.com/m1k1o/neko) and its creator [@m1k1o](https://github.com/m1k1o).
+
+## Support the Project
+
+If you find this project helpful, consider supporting its development:
+
+BTC Address: `bc1qe5zzuav86unsle7a3mtsxmgxhuqx3v05twz7fm`
+
 ```mermaid
 flowchart TD
     classDef client fill:#FF9999,stroke:#CC0000,color:#000000
