@@ -7,7 +7,9 @@ import (
 
 	"github.com/shanurrahman/orchestrator/config"
 	"github.com/shanurrahman/orchestrator/docker"
+	_ "github.com/shanurrahman/orchestrator/docs"
 	"github.com/shanurrahman/orchestrator/handlers"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Add logging middleware to track all incoming requests
@@ -61,6 +63,11 @@ func main() {
 		}
 	})
 	
+	// Serve Swagger documentation
+	router.Handle("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"), // The URL pointing to API definition
+	))
+
 	// Register handlers with explicit method checks
 	router.HandleFunc("/containers", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

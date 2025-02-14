@@ -1,0 +1,43 @@
+definitions:
+  models.ContainerResponse:
+    description: Response containing container endpoints after successful creation
+    properties:
+      container_id:
+        description: |-
+          The unique identifier of the created container
+          @example "abc123def456"
+        type: string
+      debug_path:
+        description: |-
+          The URL path to access the container's debug interface
+          @example "/abc123def456/debug/"
+        type: string
+      ui_path:
+        description: |-
+          The URL path to access the container's UI
+          @example "/abc123def456/"
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /containers:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new container instance and returns its access endpoints
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ContainerResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a new container
+      tags:
+      - containers
+swagger: "2.0"
