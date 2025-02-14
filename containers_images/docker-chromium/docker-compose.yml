@@ -3,8 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      tags:
+        - "orchestrator_chromium:latest"
+        - "orchestrator_chromium:1.2"
 
-    container_name: chromium
+    container_name: orchestrator_chromium
     security_opt:
       - seccomp:unconfined #optional
     environment:
