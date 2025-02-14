@@ -99,9 +99,18 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
 	return nil
 }
 
-func (dm *DockerManager) CreateContainer() (string, error) {
+// Add this new type at the top with other types
+type ContainerEndpoints struct {
+    ContainerID  string `json:"container_id"`
+    UIPath       string `json:"ui_path"`
+    DebugPath    string `json:"debug_path"`
+}
+
+// Modify the CreateContainer function signature and return
+func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
     containerID := utils.GenerateID()
-    log.Printf("Creating new container with ID: %s", containerID[:12])
+    shortID := containerID[:12]
+    log.Printf("Creating new container with ID: %s", shortID)
 
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
@@ -111,32 +120,32 @@ func (dm *DockerManager) CreateContainer() (string, error) {
 		NetworkMode: container.NetworkMode(dm.network),
 	}
 
-	resp, err := dm.cli.ContainerCreate(
-		context.Background(),
-		&container.Config{
-			Image:        "custom-chrome-ui:latest",
-			ExposedPorts: nat.PortSet{"4000/tcp": struct{}{}, "9222/tcp": struct{}{}},
-		},
-		hostConfig,
-		nil,
-		nil,
-		"",
-	)
+    resp, err := dm.cli.ContainerCreate(
+        context.Background(),
+        &container.Config{
+            Image:        "custom-chrome-ui:latest",
+            ExposedPorts: nat.PortSet{"4000/tcp": struct{}{}, "9222/tcp": struct{}{}},
+        },
+        hostConfig,
+        nil,
+        nil,
+        "",
+    )
 
-	if err != nil {
-		return "", fmt.Errorf("failed to create container: %v", err)
-	}
+    if err != nil {
+        return nil, fmt.Errorf("failed to create container: %v", err)
+    }
 
-	// Start the container
-	if err := dm.cli.ContainerStart(context.Background(), resp.ID, container.StartOptions{}); err != nil {
-		return "", fmt.Errorf("failed to start container: %v", err)
-	}
+    // Start the container
+    if err := dm.cli.ContainerStart(context.Background(), resp.ID, container.StartOptions{}); err != nil {
+        return nil, fmt.Errorf("failed to start container: %v", err)
+    }
 
-	// Get container IP address
-	inspect, err := dm.cli.ContainerInspect(context.Background(), resp.ID)
-	if err != nil {
-		return "", fmt.Errorf("failed to inspect container: %v", err)
-	}
+    // Get container IP address
+    inspect, err := dm.cli.ContainerInspect(context.Background(), resp.ID)
+    if err != nil {
+        return nil, fmt.Errorf("failed to inspect container: %v", err)
+    }
 
 	containerIP := inspect.NetworkSettings.Networks[dm.network].IPAddress
 
@@ -148,5 +157,12 @@ func (dm *DockerManager) CreateContainer() (string, error) {
 		// return "", err
 	}
 
-	return resp.ID[:12], nil // Return shortened container ID for URLs
+    // After successful container creation and registration
+    endpoints := &ContainerEndpoints{
+        ContainerID: shortID,
+        UIPath:      fmt.Sprintf("/%s/", shortID),
+        DebugPath:   fmt.Sprintf("/%s/debug/", shortID),
+    }
+
+    return endpoints, nil
 }
