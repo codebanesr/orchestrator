@@ -51,27 +51,27 @@ type ConsulServiceRegistration struct {
 }
 
 func (dm *DockerManager) registerWithConsul(containerID string, containerIP string) error {
-	// Register UI endpoint
-	uiRegistration := ConsulServiceRegistration{
-		Name:    fmt.Sprintf("chrome-ui-%s", containerID[:12]),
-		ID:      fmt.Sprintf("chrome-ui-%s", containerID[:12]),
-		Address: containerIP,
-		Port:    4000,
-		Tags:    []string{fmt.Sprintf("urlprefix-/%s/", containerID[:12])},
-	}
-	uiRegistration.Check.HTTP = fmt.Sprintf("http://%s:4000/health", containerIP)
-	uiRegistration.Check.Interval = "10s"
+    // Register UI endpoint (VNC viewer)
+    uiRegistration := ConsulServiceRegistration{
+        Name:    fmt.Sprintf("chrome-ui-%s", containerID[:12]),
+        ID:      fmt.Sprintf("chrome-ui-%s", containerID[:12]),
+        Address: containerIP,
+        Port:    8080,
+        Tags:    []string{fmt.Sprintf("urlprefix-/%s/", containerID[:12])},
+    }
+    uiRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/", containerIP)
+    uiRegistration.Check.Interval = "10s"
 
-	// Register Debug endpoint
-	debugRegistration := ConsulServiceRegistration{
-		Name:    fmt.Sprintf("chrome-debug-%s", containerID[:12]),
-		ID:      fmt.Sprintf("chrome-debug-%s", containerID[:12]),
-		Address: containerIP,
-		Port:    9222,
-		Tags:    []string{fmt.Sprintf("urlprefix-/%s/debug/", containerID[:12])},
-	}
-	debugRegistration.Check.HTTP = fmt.Sprintf("http://%s:4000/health", containerIP)
-	debugRegistration.Check.Interval = "10s"
+    // Register Debug endpoint
+    debugRegistration := ConsulServiceRegistration{
+        Name:    fmt.Sprintf("chrome-debug-%s", containerID[:12]),
+        ID:      fmt.Sprintf("chrome-debug-%s", containerID[:12]),
+        Address: containerIP,
+        Port:    9222,
+        Tags:    []string{fmt.Sprintf("urlprefix-/%s/debug/", containerID[:12])},
+    }
+    debugRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/", containerIP)
+    debugRegistration.Check.Interval = "10s"
 
 	// Register both services
 	for _, registration := range []ConsulServiceRegistration{uiRegistration, debugRegistration} {
@@ -112,19 +112,19 @@ func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
     shortID := containerID[:12]
     log.Printf("Creating new container with ID: %s", shortID)
 
-	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			"4000/tcp": []nat.PortBinding{{HostPort: ""}}, // UI port
-			"9222/tcp": []nat.PortBinding{{HostPort: ""}}, // Debug port
-		},
-		NetworkMode: container.NetworkMode(dm.network),
-	}
+    hostConfig := &container.HostConfig{
+        PortBindings: nat.PortMap{
+            "8080/tcp": []nat.PortBinding{{HostPort: ""}}, // VNC viewer port
+            "9222/tcp": []nat.PortBinding{{HostPort: ""}}, // Debug port
+        },
+        NetworkMode: container.NetworkMode(dm.network),
+    }
 
     resp, err := dm.cli.ContainerCreate(
         context.Background(),
         &container.Config{
-            Image:        "custom-chrome-ui:latest",
-            ExposedPorts: nat.PortSet{"4000/tcp": struct{}{}, "9222/tcp": struct{}{}},
+            Image:        "shanurcsenitap/vnc_chrome_debug:latest",
+            ExposedPorts: nat.PortSet{"8080/tcp": struct{}{}, "9222/tcp": struct{}{}},
         },
         hostConfig,
         nil,
@@ -147,17 +147,13 @@ func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
         return nil, fmt.Errorf("failed to inspect container: %v", err)
     }
 
-	containerIP := inspect.NetworkSettings.Networks[dm.network].IPAddress
+    containerIP := inspect.NetworkSettings.Networks[dm.network].IPAddress
 
-	// Register services with Consul
-	if err := dm.registerWithConsul(resp.ID, containerIP); err != nil {
-		log.Printf("Warning: Failed to register container with Consul: %v", err)
-		// Optionally clean up the container if registration fails
-		// dm.cli.ContainerRemove(context.Background(), resp.ID, container.RemoveOptions{Force: true})
-		// return "", err
-	}
+    // Register services with Consul
+    if err := dm.registerWithConsul(resp.ID, containerIP); err != nil {
+        log.Printf("Warning: Failed to register container with Consul: %v", err)
+    }
 
-    // After successful container creation and registration
     endpoints := &ContainerEndpoints{
         ContainerID: shortID,
         UIPath:      fmt.Sprintf("/%s/", shortID),
