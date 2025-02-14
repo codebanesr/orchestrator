@@ -51,12 +51,14 @@ func main() {
 	
 	// Register health check endpoint
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if r.Method == http.MethodGet {
+			w.Write([]byte("OK"))
+		}
 	})
 	
 	// Register handlers with explicit method checks

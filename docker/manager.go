@@ -2,7 +2,14 @@ package docker
 
 import (
 	"context"
+	"io"
 	"log"
+
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -29,6 +36,55 @@ func NewDockerManager(cfg *config.Config) *DockerManager {
         cfg:     cfg,
         network: "fabio_network",
     }
+}
+
+type ConsulServiceRegistration struct {
+    Name    string   `json:"Name"`
+    ID      string   `json:"ID"`
+    Address string   `json:"Address"`
+    Port    int      `json:"Port"`
+    Tags    []string `json:"Tags"`
+    Check   struct {
+        HTTP     string `json:"HTTP"`
+        Interval string `json:"Interval"`
+    } `json:"Check"`
+}
+
+func (dm *DockerManager) registerContainerWithConsul(containerID string) error {
+    registration := ConsulServiceRegistration{
+        Name:    fmt.Sprintf("chrome-instance-%s", containerID),
+        ID:      fmt.Sprintf("chrome-%s", containerID),
+        Address: containerID, // Using container ID as address
+        Port:    4000,       // Main UI port
+        Tags: []string{
+            fmt.Sprintf("urlprefix-/%s/ui proto=http dst=:4000", containerID),
+            fmt.Sprintf("urlprefix-/%s/debug proto=http dst=:9222", containerID),
+        },
+    }
+    registration.Check.HTTP = fmt.Sprintf("http://%s:4000/health", containerID)
+    registration.Check.Interval = "10s"
+
+    jsonData, err := json.Marshal(registration)
+    if err != nil {
+        return fmt.Errorf("failed to marshal registration data: %v", err)
+    }
+
+    resp, err := http.DefaultClient.Do(&http.Request{
+        Method: "PUT",
+        URL:    &url.URL{Scheme: "http", Host: "localhost:8500", Path: "/v1/agent/service/register"},
+        Body:   io.NopCloser(bytes.NewReader(jsonData)),
+    })
+    if err != nil {
+        return fmt.Errorf("failed to register service: %v", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return fmt.Errorf("failed to register service, status: %d", resp.StatusCode)
+    }
+
+    log.Printf("Successfully registered container %s with Consul", containerID)
+    return nil
 }
 
 func (dm *DockerManager) CreateContainer() (string, error) {
@@ -65,7 +121,21 @@ func (dm *DockerManager) CreateContainer() (string, error) {
 		log.Printf("Failed to create container: %v", err)
 		return "", err
 	}
-	log.Printf("Container created successfully with ID: %s", resp.ID)
 
-	return resp.ID, nil
+    // Start the container
+    if err := dm.cli.ContainerStart(context.Background(), resp.ID, container.StartOptions{}); err != nil {
+        log.Printf("Failed to start container: %v", err)
+        return "", err
+    }
+
+    // Register the container with Consul
+    if err := dm.registerContainerWithConsul(resp.ID); err != nil {
+        log.Printf("Warning: Failed to register container with Consul: %v", err)
+        // Optionally, you might want to clean up the container if registration fails
+        // dm.cli.ContainerRemove(context.Background(), resp.ID, container.RemoveOptions{Force: true})
+        // return "", err
+    }
+
+    log.Printf("Container created and registered successfully with ID: %s", resp.ID)
+    return resp.ID, nil
 }
