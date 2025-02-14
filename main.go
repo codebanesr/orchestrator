@@ -49,6 +49,16 @@ func main() {
 	// Create a new router and wrap it with logging
 	router := http.NewServeMux()
 	
+	// Register health check endpoint
+	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+	
 	// Register handlers with explicit method checks
 	router.HandleFunc("/containers", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

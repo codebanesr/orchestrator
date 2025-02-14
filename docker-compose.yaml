@@ -1,36 +1,27 @@
+version: '3'
 services:
+  consul:
+    image: hashicorp/consul
+    ports:
+      - "8500:8500"
+    command: "agent -dev -client=0.0.0.0"
+    
+  fabio:
+    image: fabiolb/fabio
+    ports:
+      - "9999:9999" # Fabio HTTP port
+      - "9998:9998" # Fabio UI port
+    environment:
+      - FABIO_REGISTRY_CONSUL_ADDR=consul:8500
+    depends_on:
+      - consul
+
   orchestrator:
     build: .
-    ports:
-      - "8090:8090"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.orchestrator.service=orchestrator"
-      - "traefik.http.routers.orchestrator.rule=PathPrefix(`/orchestrator`)"
-      - "traefik.http.routers.orchestrator.entrypoints=web"
-      - "traefik.http.services.orchestrator.loadbalancer.server.port=8090"
-      - "traefik.docker.network=shanur"
-    networks:
-      - shanur
-
-  traefik:
-    image: traefik:v3.3
-    labels:
-      - "traefik.docker.network=shanur"
-    ports:
-      - "80:80"
-      - "8080:8080"
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - shanur
-
-networks:
-  shanur:
-    driver: bridge
+    container_name: orchestrator
+    expose:
+      - "8090"
+    environment:
+      - CONSUL_HTTP_ADDR=consul:8500
+    depends_on:
+      - consul

@@ -80,3 +80,22 @@ https://yourdomain.com/{id}/debug → Debug endpoint
 <!-- curl -k -v -u "admin:password123" https://localhost/api/containers -->
 
 curl -u admin:password123 http://localhost/api/containers
+
+
+
+---
+
+# Register a route to fabio
+curl -X PUT http://localhost:8500/v1/agent/service/register -d '{
+  "Name": "orchestrator",
+  "ID": "orchestrator-1",
+  "Address": "orchestrator",
+  "Port": 8090,
+  "Tags": ["urlprefix-/"],
+  "Check": {
+    "HTTP": "http://orchestrator:8090/health",
+    "Interval": "10s"
+  }
+}'
+
+
