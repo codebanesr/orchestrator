@@ -8,8 +8,10 @@ require (
 	github.com/docker/docker v27.5.1+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/swaggo/swag v1.16.4
+	github.com/swaggo/swag v1.16.4 // Make sure this version is present
 )
+
+require github.com/go-chi/chi/v5 v5.2.1
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
@@ -18,7 +20,6 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/go-chi/chi/v5 v5.2.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect

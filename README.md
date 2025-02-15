@@ -105,16 +105,23 @@ flowchart TD
 
 ### Prerequisites
 - Docker 20.10+
+- Go 1.22+
 - 4GB RAM (8GB recommended)
 - Linux kernel >5.10
 
+### Installation & Setup
 ```bash
 # Clone with depth for a faster download
 git clone --depth=1 https://github.com/codebanesr/orchestrator.git
 cd orchestrator
 
-# Start the demo configuration for virtual desktop containers
-docker-compose -f docker-compose.demo.yml up
+# Install dependencies
+go mod download
+
+# Build and run using make commands
+make swagger  # Generate Swagger documentation
+make build   # Build the application
+make run     # Run the application (includes swagger generation)
 ```
 
 ![Dashboard Preview](https://via.placeholder.com/800x400/1a5c1a/ffffff?text=Control+Hub+Dashboard+Preview)

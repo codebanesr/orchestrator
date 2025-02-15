@@ -1,38 +1,96 @@
+basePath: /
 definitions:
-  models.ContainerResponse:
-    description: Response containing container endpoints after successful creation
+  docker.ContainerEndpoints:
     properties:
       container_id:
-        description: |-
-          The unique identifier of the created container
-          @example "abc123def456"
         type: string
       debug_path:
-        description: |-
-          The URL path to access the container's debug interface
-          @example "/abc123def456/debug/"
         type: string
       ui_path:
-        description: |-
-          The URL path to access the container's UI
-          @example "/abc123def456/"
         type: string
     type: object
+  docker.ContainerStatus:
+    properties:
+      endpoints:
+        $ref: '#/definitions/docker.ContainerEndpoints'
+      error:
+        type: string
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  docker.ImageInfo:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.CreateContainerRequest:
+    description: Request body for creating a new container
+    properties:
+      image_id:
+        description: |-
+          The ID of the image to use for the container
+          @example ubuntu-base
+        type: string
+    required:
+    - image_id
+    type: object
+  handlers.CreateContainerResponse:
+    description: Creates a new container instance and returns its access endpoints
+    properties:
+      container_id:
+        type: string
+      status_url:
+        type: string
+    type: object
+host: localhost:8090
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A container orchestration service API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Orchestrator API
+  version: "1.0"
 paths:
   /containers:
     post:
       consumes:
       - application/json
-      description: Creates a new container instance and returns its access endpoints
+      description: Create a new container from a specified image
+      parameters:
+      - description: Container creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateContainerRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ContainerResponse'
+            $ref: '#/definitions/handlers.CreateContainerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
         "500":
           description: Internal Server Error
           schema:
@@ -40,4 +98,48 @@ paths:
       summary: Create a new container
       tags:
       - containers
+  /containers/{id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Get the current status of a container
+      parameters:
+      - description: Container ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/docker.ContainerStatus'
+        "404":
+          description: Container not found
+          schema:
+            type: string
+      summary: Get container status
+      tags:
+      - containers
+  /containers/images:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all available container images
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/docker.ImageInfo'
+            type: array
+      summary: List available images
+      tags:
+      - images
+schemes:
+- http
 swagger: "2.0"

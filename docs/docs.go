@@ -9,7 +9,16 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -17,7 +26,7 @@ const docTemplate = `{
     "paths": {
         "/containers": {
             "post": {
-                "description": "Creates a new container instance and returns its access endpoints",
+                "description": "Create a new container from a specified image",
                 "consumes": [
                     "application/json"
                 ],
@@ -28,11 +37,28 @@ const docTemplate = `{
                     "containers"
                 ],
                 "summary": "Create a new container",
+                "parameters": [
+                    {
+                        "description": "Container creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateContainerRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.ContainerResponse"
+                            "$ref": "#/definitions/handlers.CreateContainerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     "500": {
@@ -43,23 +69,148 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/containers/images": {
+            "get": {
+                "description": "Get a list of all available container images",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "List available images",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/docker.ImageInfo"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/containers/{id}/status": {
+            "get": {
+                "description": "Get the current status of a container",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "containers"
+                ],
+                "summary": "Get container status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Container ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/docker.ContainerStatus"
+                        }
+                    },
+                    "404": {
+                        "description": "Container not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "models.ContainerResponse": {
-            "description": "Response containing container endpoints after successful creation",
+        "docker.ContainerEndpoints": {
             "type": "object",
             "properties": {
                 "container_id": {
-                    "description": "The unique identifier of the created container\n@example \"abc123def456\"",
                     "type": "string"
                 },
                 "debug_path": {
-                    "description": "The URL path to access the container's debug interface\n@example \"/abc123def456/debug/\"",
                     "type": "string"
                 },
                 "ui_path": {
-                    "description": "The URL path to access the container's UI\n@example \"/abc123def456/\"",
+                    "type": "string"
+                }
+            }
+        },
+        "docker.ContainerStatus": {
+            "type": "object",
+            "properties": {
+                "endpoints": {
+                    "$ref": "#/definitions/docker.ContainerEndpoints"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "docker.ImageInfo": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.CreateContainerRequest": {
+            "description": "Request body for creating a new container",
+            "type": "object",
+            "required": [
+                "image_id"
+            ],
+            "properties": {
+                "image_id": {
+                    "description": "The ID of the image to use for the container\n@example ubuntu-base",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreateContainerResponse": {
+            "description": "Creates a new container instance and returns its access endpoints",
+            "type": "object",
+            "properties": {
+                "container_id": {
+                    "type": "string"
+                },
+                "status_url": {
                     "type": "string"
                 }
             }
@@ -69,12 +220,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0",
+	Host:             "localhost:8090",
+	BasePath:         "/",
+	Schemes:          []string{"http"},
+	Title:            "Orchestrator API",
+	Description:      "A container orchestration service API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
