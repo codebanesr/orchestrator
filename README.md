@@ -12,7 +12,8 @@
              ▀                                                                                               
 </pre>
 
-### 🌐 Browser Orchestration Service - Enterprise-Grade Containerized Chrome Management
+### <img src="https://img.icons8.com/fluency/48/000000/virtual-machine.png" alt="Orchestrator Icon" style="vertical-align: middle; margin-right: 0.5em;" width="30"/> Virtual Desktop & Browser Orchestrator
+#### Enterprise-Grade Containerized Linux Desktops & Browsers with Full External Control
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/shanurcsenitap/vnc_chrome_debug?style=flat-square&color=3cb371&labelColor=333333)](https://hub.docker.com/r/yourrepo/orchestrator)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3cb371.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
@@ -22,13 +23,16 @@
 
 <div style="color: #3cb371;">
 
-A powerful, scalable container orchestration service...
+A powerful, scalable platform for virtual Linux containers running full-featured desktops and browsers—designed for complete external control.  
+Perfect not only for automated testing, secure web scraping, and remote debugging but also for running AI agents that require a full desktop environment and browser interaction.
 
-<span style="color:transparent;position:absolute;z-index:-1;opacity:0">Browser Orchestration, Containerized Chrome, Scalable Browser Automation, Isolated Browser Instances, Enterprise Web Scraping</span>
+<span style="color:transparent;position:absolute;z-index:-1;opacity:0">
+Virtual Linux Containers, Externally Controlled Browsers, Containerized Desktops, AI Agent Environments, Automated Testing, Secure Remote Browsing
+</span>
 
 > **Featured On**: [Awesome-Containers List](https://github.com/awesome-containers) | **Demo**: [live.orchestrator.dev](https://live.orchestrator.dev)
 
-Inspired by [neko](https://github.com/m1k1o/neko) and its creator [@m1k1o](https://github.com/m1k1o).
+Inspired by projects like [neko](https://github.com/m1k1o/neko) and the visionary work of [@m1k1o](https://github.com/m1k1o).
 
 ## 📖 Table of Contents
 - [Features](#-features)
@@ -44,57 +48,58 @@ Inspired by [neko](https://github.com/m1k1o/neko) and its creator [@m1k1o](https
 ## 🚀 Features
 <div align="center">
 
-| Scalability | Security | Monitoring |
-|-------------|----------|------------|
-| <img src="https://img.icons8.com/?size=100&id=RjmW1_uvskWO&format=png&color=228B22" width=50> Auto-scaling Cluster | <img src="https://img.icons8.com/3d-fluency/50/lock.png" width=50> Isolated Containers | <img src="https://img.icons8.com/3d-fluency/50/visible.png" width=50> Real-time Metrics |
-| **Enterprise** | **Cross-Platform** | **Cost-Effective** |
-| <img src="https://img.icons8.com/3d-fluency/50/factory.png" width=50> SLA Guarantees | <img src="https://img.icons8.com/3d-fluency/50/linux.png" width=50> Multi-Arch Support | <img src="https://img.icons8.com/3d-fluency/50/money-bag.png" width=50> Pay-per-Use |
+| Isolation & Control | Scalability | Monitoring & Security |
+|---------------------|-------------|-----------------------|
+| <img src="https://img.icons8.com/?size=100&id=RjmW1_uvskWO&format=png&color=228B22" width=50> Fully Isolated Containers | <img src="https://img.icons8.com/3d-fluency/50/factory.png" width=50> Auto-scaling Clusters | <img src="https://img.icons8.com/3d-fluency/50/visible.png" width=50> Real-time Metrics |
+| **External Control** | **Enterprise Ready** | **Zero Trust Security** |
+| <img src="https://img.icons8.com/3d-fluency/50/remote-desktop.png" width=50> Remotely Managed Desktops & Browsers | <img src="https://img.icons8.com/3d-fluency/50/network.png" width=50> Multi-Node Support | <img src="https://img.icons8.com/3d-fluency/50/lock.png" width=50> Mutual TLS & RBAC |
 
 </div>
 
 ### 🎯 Use Cases
-- **🤖 Automated Testing**: Run 1000+ parallel Playwright/Selenium sessions
-- **🕷️ Web Scraping**: Rotate IPs & avoid detection with disposable browsers
-- **🎥 Video Streaming**: 4K video rendering with GPU acceleration
-- **🔒 Security Testing**: Isolated environments for malware analysis
-- **📊 Load Testing**: Simulate 10k+ concurrent users realistically
+- **🤖 Automated Testing**: Run thousands of parallel browser sessions with complete external control.
+- **🕷️ Web Scraping**: Leverage disposable, isolated browser environments to rotate IPs and evade detection.
+- **🖥️ Remote Debugging & Demos**: Access full desktop environments remotely for troubleshooting and presentations.
+- **🤖 AI Desktop Agents**: Empower AI agents with dedicated desktop environments and browser access to simulate real computer use.
+- **🔒 Security Analysis**: Execute malware or vulnerability testing in a fully sandboxed container.
+- **📊 Performance Testing**: Simulate high user concurrency with truly isolated instances.
 
 ## 🏗️ Architecture
 ```mermaid
 flowchart TD
     classDef client fill:#99FF99,stroke:#00CC00,color:#1a5c1a
-    classDef browser fill:#99FF99,stroke:#00CC00,color:#1a5c1a
+    classDef desktop fill:#99FF99,stroke:#00CC00,color:#1a5c1a
     classDef core fill:#99FF99,stroke:#00CC00,color:#1a5c1a
     
-    Client[("Client")]:::client
+    Client[("Client / AI Agent")]:::client
     
-    subgraph BrowserInstances["Browser Containers"]
+    subgraph VirtualDesktops["Virtual Desktop Containers"]
         direction TB
-        C1["Chrome Container 1"]:::browser
-        C2["Chrome Container 2"]:::browser
-        CN["Chrome Container N..."]:::browser
+        D1["Desktop Container 1"]:::desktop
+        D2["Desktop Container 2"]:::desktop
+        DN["Desktop Container N..."]:::desktop
     end
     
-    subgraph CoreServices["Core Infrastructure"]
+    subgraph ControlInfrastructure["Control Infrastructure"]
         direction TB
-        O["Orchestrator Service<br/><i>port: 8090</i>"]:::core
-        F["Fabio LB<br/><i>ports: 9999, 9998</i>"]:::core
-        CS["Consul SD<br/><i>port: 8500</i>"]:::core
+        CH["Control Hub Service<br/><i>port: 8090</i>"]:::core
+        LB["Load Balancer<br/>(Fabio LB)<br/><i>ports: 9999, 9998</i>"]:::core
+        SD["Service Discovery<br/>(Consul)<br/><i>port: 8500</i>"]:::core
     end
     
-    Client -->|"HTTP Request"| F
-    F -->|"Load Balance"| O
-    O -->|"Container Management"| C1
-    O -->|"Container Management"| C2
-    O -->|"..."| CN
-    O -.->|"Service Registration"| CS
-    F -.->|"Health Check"| CS
+    Client -->|"HTTP Request"| LB
+    LB -->|"Load Balance"| CH
+    CH -->|"Manage Containers"| D1
+    CH -->|"Manage Containers"| D2
+    CH -->|"..."| DN
+    CH -.->|"Service Registration"| SD
+    LB -.->|"Health Checks"| SD
 ```
 
 **Component Legend**:
-- 🧑 User Clients: External HTTP requests
-- 🐳 Browser Containers: Isolated Chrome instances
-- ⚙️ Core Services: Orchestration backbone
+- 🧑 **User Clients / AI Agents**: External HTTP requests or AI-driven automation tools.
+- 🐳 **Desktop Containers**: Fully isolated Linux environments running a complete desktop & browser.
+- ⚙️ **Control Infrastructure**: The backbone managing container orchestration, load balancing, and service discovery.
 
 ## 🚤 Quick Start
 
@@ -104,58 +109,62 @@ flowchart TD
 - Linux kernel >5.10
 
 ```bash
-# Clone with depth for faster download
+# Clone with depth for a faster download
 git clone --depth=1 https://github.com/codebanesr/orchestrator.git
 cd orchestrator
 
-# Start with demo configuration
+# Start the demo configuration for virtual desktop containers
 docker-compose -f docker-compose.demo.yml up
 ```
 
-![Dashboard Preview](https://via.placeholder.com/800x400/1a5c1a/ffffff?text=Orchestrator+Dashboard+Preview)
+![Dashboard Preview](https://via.placeholder.com/800x400/1a5c1a/ffffff?text=Control+Hub+Dashboard+Preview)
 
-### 🔧 Optional Environment Variables
+## ⚙️ Advanced Configuration
+
+Our platform is highly configurable. The options below let you fine-tune the behavior of both the Control Hub and the individual desktop containers—ensuring optimal performance for everything from automated testing to AI agent desktop simulations. For a deeper dive into how these configurations integrate with our modular architecture, refer back to the [Architecture](#-architecture) section.
+
+### 🔧 Environment Variables
 
 | Variable           | Description                                                                                                                                                                   |
 | :-----------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CUSTOM_PORT        | Internal port the container listens on for http if it needs to be swapped from the default 3000.                                                                               |
-| CUSTOM_HTTPS_PORT  | Internal port the container listens on for https if it needs to be swapped from the default 3001.                                                                              |
-| CUSTOM_USER        | HTTP Basic auth username, abc is default.                                                                                                                                    |
-| PASSWORD           | HTTP Basic auth password, abc is default. If unset there will be no auth                                                                                                       |
-| SUBFOLDER          | Subfolder for the application if running a subfolder reverse proxy, need both slashes IE `/subfolder/`                                                                         |
-| TITLE              | The page title displayed on the web browser, default "KasmVNC Client".                                                                                                         |
-| FM_HOME            | This is the home directory (landing) for the file manager, default "/config".                                                                                                  |
-| START_DOCKER       | If set to false a container with privilege will not automatically start the DinD Docker setup.                                                                                 |
-| DRINODE            | If mounting in /dev/dri for [DRI3 GPU Acceleration](https://www.kasmweb.com/kasmvnc/docs/master/gpu_acceleration.html) allows you to specify the device to use IE `/dev/dri/renderD128` |
-| DISABLE_IPV6       | If set to true or any value this will disable IPv6                                                                                                                           |
-| LC_ALL             | Set the Language for the container to run as IE `fr_FR.UTF-8` or `ar_AE.UTF-8`                                                                                                |
-| NO_DECOR           | If set the application will run without window borders in openbox for use as a PWA.                                                                                            |
-| NO_FULL            | Do not automatically fullscreen applications when using openbox.                                                                                                             |
+| CUSTOM_PORT        | Override the default HTTP port (3000) for the container.                                                                                                                    |
+| CUSTOM_HTTPS_PORT  | Override the default HTTPS port (3001) for the container.                                                                                                                     |
+| CUSTOM_USER        | HTTP Basic auth username (default: `abc`).                                                                                                                                    |
+| PASSWORD           | HTTP Basic auth password (default: `abc`). If unset, authentication is disabled.                                                                                              |
+| SUBFOLDER          | Subfolder path if running behind a reverse proxy (format: `/subfolder/`).                                                                                                      |
+| TITLE              | Browser window title (default: **Virtual Browser Client**).                                                                                                                   |
+| FM_HOME            | Home directory for the file manager (default: `/config`).                                                                                                                     |
+| START_DOCKER       | Set to `false` to disable auto-start of the Docker-in-Docker (DinD) setup.                                                                                                    |
+| DRINODE            | Specify the GPU device for [DRI3 GPU Acceleration](https://www.kasmweb.com/kasmvnc/docs/master/gpu_acceleration.html) (e.g., `/dev/dri/renderD128`).                     |
+| DISABLE_IPV6       | Disable IPv6 if set to any value.                                                                                                                                             |
+| LC_ALL             | Locale setting (e.g., `fr_FR.UTF-8` or `ar_AE.UTF-8`).                                                                                                                         |
+| NO_DECOR           | Run without window borders (ideal for PWA setups).                                                                                                                            |
+| NO_FULL            | Prevents applications from auto-fullscreen when using the window manager.                                                                                                     |
 
-### ⚙️ Optional Run Configurations
+### ⚙️ Run Configurations
 
-| Variable                                         | Description                                                                                                                                                                                                                                                       |
-| :-----------------------------------------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--privileged`                                   | Will start a Docker in Docker (DinD) setup inside the container to use docker in an isolated environment. For increased performance mount the Docker directory inside the container to the host IE `-v /home/user/docker-data:/var/lib/docker`.             |
-| `-v /var/run/docker.sock:/var/run/docker.sock`    | Mount in the host level Docker socket to either interact with it via CLI or use Docker enabled applications.                                                                                                            |
-| `--device /dev/dri:/dev/dri`                       | Mount a GPU into the container. This can be used in conjunction with the `DRINODE` environment variable to leverage a host video card for GPU accelerated applications. Only **Open Source** drivers are supported IE (Intel, AMDGPU, Radeon, ATI, Nouveau). |
+| Option                                         | Description                                                                                                                                                                                                                                                       |
+| :----------------------------------------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--privileged`                                   | Enables Docker-in-Docker (DinD) within the container for isolated Docker usage. For improved performance, mount the host’s Docker directory (e.g., `-v /home/user/docker-data:/var/lib/docker`).             |
+| `-v /var/run/docker.sock:/var/run/docker.sock`    | Mounts the host Docker socket for CLI interaction or use with Docker-enabled applications.                                                                                                            |
+| `--device /dev/dri:/dev/dri`                       | Mounts a GPU into the container. Used with the `DRINODE` variable to enable GPU acceleration (supports open-source drivers like Intel, AMDGPU, Radeon, ATI, Nouveau). |
 
 ## 🔒 Security
-- **Zero Trust Architecture**: Mutual TLS between components
-- **Automated Vulnerability Scanning**: Daily CVE checks
-- **RBAC**: Role-based access control
-- **Data Protection**: AES-256 encryption at rest
+- **Zero Trust Architecture**: Mutual TLS between all components.
+- **Automated Vulnerability Scanning**: Daily CVE checks ensure up-to-date security.
+- **RBAC**: Role-based access control for granular permissions.
+- **Data Protection**: AES-256 encryption for data at rest.
 
 Certifications:
 - [SOC2](https://soc2.com) Compliant Infrastructure
 - GDPR Ready
 
 ## 📈 Benchmarks
-| Metric | Single Node | 5-Node Cluster |
-|--------|-------------|----------------|
-| Containers/s | 50 | 250 |
-| Startup Time | 1.2s | 1.5s |
-| Memory/Container | 128MB | 110MB |
+| Metric             | Single Node | 5-Node Cluster |
+|--------------------|-------------|----------------|
+| Containers/s       | 50          | 250            |
+| Startup Time       | 1.2s        | 1.5s           |
+| Memory/Container   | 128MB       | 110MB          |
 
 ## 🤝 Contributing
 We follow the [GitHub Flow](https://guides.github.com/introduction/flow/):
@@ -175,19 +184,19 @@ Help us sustain and improve the project:
 - ☕ [Buy Me a Coffee](https://buymeacoffee.com/codebanesr)
 - 🌟 **Star the Repository**
 - 🐛 Report Bugs & Issues
-- 📢 Share with Your Network
+- 📢 Spread the Word
 
-Enterprise Support: contact@orchestrator.dev
+For Enterprise Support, please contact: **contact@orchestrator.dev**
 
 ## ❓ FAQ
-### Q: How does this compare to Selenium Grid?
-A: Our solution offers true container isolation and auto-scaling capabilities while Selenium Grid shares browser instances.
+### Q: How does this differ from traditional browser orchestration?
+**A:** Instead of merely coordinating shared browser sessions, our platform spins up fully isolated virtual Linux containers running full desktops & browsers that you control externally—delivering enhanced security, flexibility, and performance.
 
-### Q: Can I use Firefox instead of Chrome?
-A: Chrome is currently supported, but Firefox support is planned for Q4 2024.
+### Q: Can I use browsers other than Chrome?
+**A:** Our solution is optimized for Chrome. However, support for additional browsers (such as Firefox) is on our roadmap.
 
-### Q: What's the maximum cluster size?
-A: Tested up to 100 nodes handling 10k concurrent browsers.
+### Q: What’s the maximum cluster size?
+**A:** We’ve successfully tested clusters of up to 100 nodes handling 10k concurrent sessions.
 
 ---
 
