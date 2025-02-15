@@ -1,4 +1,5 @@
-<div align="center">
+
+<div align="center" style="color: #1a5c1a;">
 
 <pre style="color: #2ecc70">
    ▄███████▄  ▄██████▄     ▄████████     ███        ▄████████  ▄█       
@@ -12,17 +13,19 @@
                           ███    ███                          ▀         
 </pre>
 
-### 🌐 Browser Orchestration Service - Enterprise-Grade Containerized Chrome Management
+<h3 style="color: #228B22;">🌐 Browser Orchestration Service - Enterprise-Grade Containerized Chrome Management</h3>
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/shanurcsenitap/vnc_chrome_debug?style=flat-square)](https://hub.docker.com/r/yourrepo/orchestrator)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
-[![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/codebanesr/orchestrator/build.yml?style=flat-square)](https://github.com/codebanesr/orchestrator/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/shanurcsenitap/vnc_chrome_debug?style=flat-square&color=2ecc71)](https://hub.docker.com/r/yourrepo/orchestrator)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-2ecc71.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+[![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/codebanesr/orchestrator/build.yml?style=flat-square&color=2ecc71)](https://github.com/codebanesr/orchestrator/actions)
 
 </div>
 
+<div style="color: #1a5c1a;">
+
 A powerful, scalable container orchestration service...
 
-**Key SEO Keywords**: Browser Orchestration, Containerized Chrome, Scalable Browser Automation, Isolated Browser Instances, Enterprise Web Scraping
+**Key SEO Keywords**: <span style="color: #228B22;">Browser Orchestration, Containerized Chrome, Scalable Browser Automation, Isolated Browser Instances, Enterprise Web Scraping</span>
 
 > **Featured On**: [Awesome-Containers List](https://github.com/awesome-containers) | **Demo**: [live.orchestrator.dev](https://live.orchestrator.dev)
 
@@ -44,7 +47,7 @@ Inspired by [neko](https://github.com/m1k1o/neko) and its creator [@m1k1o](https
 
 | Scalability | Security | Monitoring |
 |-------------|----------|------------|
-| <img src="https://img.icons8.com/?size=100&id=RjmW1_uvskWO&format=png&color=000000" width=50> Auto-scaling Cluster | <img src="https://img.icons8.com/3d-fluency/50/lock.png" width=50> Isolated Containers | <img src="https://img.icons8.com/3d-fluency/50/visible.png" width=50> Real-time Metrics |
+| <img src="https://img.icons8.com/?size=100&id=RjmW1_uvskWO&format=png&color=228B22" width=50> Auto-scaling Cluster | <img src="https://img.icons8.com/3d-fluency/50/lock.png" width=50> Isolated Containers | <img src="https://img.icons8.com/3d-fluency/50/visible.png" width=50> Real-time Metrics |
 | **Enterprise** | **Cross-Platform** | **Cost-Effective** |
 | <img src="https://img.icons8.com/3d-fluency/50/factory.png" width=50> SLA Guarantees | <img src="https://img.icons8.com/3d-fluency/50/linux.png" width=50> Multi-Arch Support | <img src="https://img.icons8.com/3d-fluency/50/money-bag.png" width=50> Pay-per-Use |
 
@@ -60,9 +63,9 @@ Inspired by [neko](https://github.com/m1k1o/neko) and its creator [@m1k1o](https
 ## 🏗️ Architecture
 ```mermaid
 flowchart TD
-    classDef client fill:#FF9999,stroke:#CC0000,color:#000000
-    classDef browser fill:#99FF99,stroke:#00CC00,color:#000000
-    classDef core fill:#9999FF,stroke:#0000CC,color:#FFFFFF
+    classDef client fill:#99FF99,stroke:#00CC00,color:#1a5c1a
+    classDef browser fill:#99FF99,stroke:#00CC00,color:#1a5c1a
+    classDef core fill:#99FF99,stroke:#00CC00,color:#1a5c1a
     
     Client[("Client")]:::client
     
@@ -110,7 +113,7 @@ cd orchestrator
 docker-compose -f docker-compose.demo.yml up
 ```
 
-![Dashboard Preview](https://via.placeholder.com/800x400.png?text=Orchestrator+Dashboard+Preview)
+![Dashboard Preview](https://via.placeholder.com/800x400/1a5c1a/ffffff?text=Orchestrator+Dashboard+Preview)
 
 ## ⚙️ Advanced Configuration
 
@@ -157,7 +160,7 @@ We follow the [GitHub Flow](https://guides.github.com/introduction/flow/):
 5. Push to the branch (`git push origin feature/AmazingFeature`)
 6. Open a Pull Request
 
-[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-blue?style=flat-square)](https://codespaces.new/codebanesr/orchestrator)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-228B22?style=flat-square)](https://codespaces.new/codebanesr/orchestrator)
 
 ## 💖 Support
 Help us sustain and improve the project:
@@ -181,6 +184,8 @@ A: Tested up to 100 nodes handling 10k concurrent browsers.
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ by Codebanesr | Documentation powered by <a href="https://readme.com">ReadMe</a></sub>
+<div align="center" style="color: #1a5c1a;">
+  <sub>Built with ❤️ by Codebanesr | Documentation powered by <a href="https://readme.com" style="color: #228B22;">ReadMe</a></sub>
+</div>
+
 </div>
