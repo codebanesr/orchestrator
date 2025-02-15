@@ -1,4 +1,3 @@
-
 <div align="center">
 
 <pre style="color: #3cb371">   
@@ -115,23 +114,31 @@ docker-compose -f docker-compose.demo.yml up
 
 ![Dashboard Preview](https://via.placeholder.com/800x400/1a5c1a/ffffff?text=Orchestrator+Dashboard+Preview)
 
-## ⚙️ Advanced Configuration
+### 🔧 Optional Environment Variables
 
-### Environment Variables
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MAX_CONTAINERS` | Maximum concurrent browsers | 100 |
-| `SESSION_TIMEOUT` | Inactive session timeout | 900s |
-| `GPU_ENABLED` | Enable NVIDIA GPU support | false |
+| Variable           | Description                                                                                                                                                                   |
+| :-----------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CUSTOM_PORT        | Internal port the container listens on for http if it needs to be swapped from the default 3000.                                                                               |
+| CUSTOM_HTTPS_PORT  | Internal port the container listens on for https if it needs to be swapped from the default 3001.                                                                              |
+| CUSTOM_USER        | HTTP Basic auth username, abc is default.                                                                                                                                    |
+| PASSWORD           | HTTP Basic auth password, abc is default. If unset there will be no auth                                                                                                       |
+| SUBFOLDER          | Subfolder for the application if running a subfolder reverse proxy, need both slashes IE `/subfolder/`                                                                         |
+| TITLE              | The page title displayed on the web browser, default "KasmVNC Client".                                                                                                         |
+| FM_HOME            | This is the home directory (landing) for the file manager, default "/config".                                                                                                  |
+| START_DOCKER       | If set to false a container with privilege will not automatically start the DinD Docker setup.                                                                                 |
+| DRINODE            | If mounting in /dev/dri for [DRI3 GPU Acceleration](https://www.kasmweb.com/kasmvnc/docs/master/gpu_acceleration.html) allows you to specify the device to use IE `/dev/dri/renderD128` |
+| DISABLE_IPV6       | If set to true or any value this will disable IPv6                                                                                                                           |
+| LC_ALL             | Set the Language for the container to run as IE `fr_FR.UTF-8` or `ar_AE.UTF-8`                                                                                                |
+| NO_DECOR           | If set the application will run without window borders in openbox for use as a PWA.                                                                                            |
+| NO_FULL            | Do not automatically fullscreen applications when using openbox.                                                                                                             |
 
-```yaml
-# docker-compose.prod.yml
-services:
-  orchestrator:
-    environment:
-      - MAX_CONTAINERS=500
-      - ENABLE_CLUSTER_MODE=true
-```
+### ⚙️ Optional Run Configurations
+
+| Variable                                         | Description                                                                                                                                                                                                                                                       |
+| :-----------------------------------------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--privileged`                                   | Will start a Docker in Docker (DinD) setup inside the container to use docker in an isolated environment. For increased performance mount the Docker directory inside the container to the host IE `-v /home/user/docker-data:/var/lib/docker`.             |
+| `-v /var/run/docker.sock:/var/run/docker.sock`    | Mount in the host level Docker socket to either interact with it via CLI or use Docker enabled applications.                                                                                                            |
+| `--device /dev/dri:/dev/dri`                       | Mount a GPU into the container. This can be used in conjunction with the `DRINODE` environment variable to leverage a host video card for GPU accelerated applications. Only **Open Source** drivers are supported IE (Intel, AMDGPU, Radeon, ATI, Nouveau). |
 
 ## 🔒 Security
 - **Zero Trust Architecture**: Mutual TLS between components
