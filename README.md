@@ -1,7 +1,7 @@
 
-<div align="center" style="color: #1a5c1a;">
+<div align="center">
 
-<pre style="color: #2ecc70">
+<pre style="color: #3cb371">
    ▄███████▄  ▄██████▄     ▄████████     ███        ▄████████  ▄█       
   ███    ███ ███    ███   ███    ███ ▀█████████▄   ███    ███ ███       
   ███    ███ ███    ███   ███    ███    ▀███▀▀██   ███    ███ ███       
@@ -13,19 +13,19 @@
                           ███    ███                          ▀         
 </pre>
 
-<h3 style="color: #228B22;">🌐 Browser Orchestration Service - Enterprise-Grade Containerized Chrome Management</h3>
+### 🌐 Browser Orchestration Service - Enterprise-Grade Containerized Chrome Management
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/shanurcsenitap/vnc_chrome_debug?style=flat-square&color=2ecc71)](https://hub.docker.com/r/yourrepo/orchestrator)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-2ecc71.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
-[![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/codebanesr/orchestrator/build.yml?style=flat-square&color=2ecc71)](https://github.com/codebanesr/orchestrator/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/shanurcsenitap/vnc_chrome_debug?style=flat-square&color=3cb371&labelColor=333333)](https://hub.docker.com/r/yourrepo/orchestrator)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-3cb371.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+[![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/codebanesr/orchestrator/build.yml?style=flat-square&color=3cb371&labelColor=333333)](https://github.com/codebanesr/orchestrator/actions)
 
 </div>
 
-<div style="color: #1a5c1a;">
+<div style="color: #3cb371;">
 
 A powerful, scalable container orchestration service...
 
-**Key SEO Keywords**: <span style="color: #228B22;">Browser Orchestration, Containerized Chrome, Scalable Browser Automation, Isolated Browser Instances, Enterprise Web Scraping</span>
+<span style="color:transparent;position:absolute;z-index:-1;opacity:0">Browser Orchestration, Containerized Chrome, Scalable Browser Automation, Isolated Browser Instances, Enterprise Web Scraping</span>
 
 > **Featured On**: [Awesome-Containers List](https://github.com/awesome-containers) | **Demo**: [live.orchestrator.dev](https://live.orchestrator.dev)
 
