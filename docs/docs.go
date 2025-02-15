@@ -159,13 +159,16 @@ const docTemplate = `{
         "docker.ContainerEndpoints": {
             "type": "object",
             "properties": {
+                "chat_api_path": {
+                    "type": "string"
+                },
                 "container_id": {
                     "type": "string"
                 },
-                "debug_path": {
+                "novnc_path": {
                     "type": "string"
                 },
-                "ui_path": {
+                "vnc_path": {
                     "type": "string"
                 }
             }

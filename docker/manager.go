@@ -8,11 +8,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 
 	"fmt"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/shanurrahman/orchestrator/config"
@@ -35,10 +38,38 @@ func NewDockerManager(cfg *config.Config) *DockerManager {
         return nil
     }
     log.Println("Docker client initialized successfully")
+
+    // Create Docker network if it doesn't exist
+    networkName := "fabio_network"
+    networks, err := cli.NetworkList(context.Background(), network.ListOptions{})
+    if err != nil {
+        log.Printf("Error listing networks: %v", err)
+        return nil
+    }
+
+    networkExists := false
+    for _, network := range networks {
+        if network.Name == networkName {
+            networkExists = true
+            break
+        }
+    }
+
+    if !networkExists {
+        _, err := cli.NetworkCreate(context.Background(), networkName, types.NetworkCreate{
+            Driver: "bridge",
+        })
+        if err != nil {
+            log.Printf("Error creating network: %v", err)
+            return nil
+        }
+        log.Printf("Created Docker network: %s", networkName)
+    }
+
     return &DockerManager{
         cli:     cli,
         cfg:     cfg,
-        network: "fabio_network",
+        network: networkName,
         containerStats: containerStatusMap{
             statuses: make(map[string]*ContainerStatus),
         },
@@ -119,7 +150,7 @@ func (dm *DockerManager) handleContainerCreation(shortID string, imageName strin
     dm.containerStats.Unlock()
 }
 
-func (dm *DockerManager) registerWithConsul(containerID string, containerIP string) error {
+func (dm *DockerManager) registerWithConsul(containerID string, containerIP string, consulAddr string) error {
     // Register Chat Commands endpoint
     chatRegistration := ConsulServiceRegistration{
         Name:    fmt.Sprintf("chat-api-%s", containerID[:12]),
@@ -162,7 +193,7 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
 
         resp, err := http.DefaultClient.Do(&http.Request{
             Method: "PUT",
-            URL:    &url.URL{Scheme: "http", Host: "localhost:8500", Path: "/v1/agent/service/register"},
+            URL:    &url.URL{Scheme: "http", Host: consulAddr, Path: "/v1/agent/service/register"},
             Body:   io.NopCloser(bytes.NewReader(jsonData)),
         })
         if err != nil {
@@ -278,14 +309,23 @@ func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCC
     // Get container IP address
     inspect, err := dm.cli.ContainerInspect(context.Background(), resp.ID)
     if err != nil {
+        // Clean up the container if inspection fails
+        dm.cli.ContainerRemove(context.Background(), resp.ID, container.RemoveOptions{Force: true})
         return nil, fmt.Errorf("failed to inspect container: %v", err)
     }
 
     containerIP := inspect.NetworkSettings.Networks[dm.network].IPAddress
 
-    // Register services with Consul
-    if err := dm.registerWithConsul(resp.ID, containerIP); err != nil {
-        log.Printf("Warning: Failed to register container with Consul: %v", err)
+    // Register services with Consul using environment variable for Consul address
+    consulAddr := os.Getenv("FABIO_REGISTRY_CONSUL_ADDR")
+    if consulAddr == "" {
+        consulAddr = "consul:8500" // fallback to default
+    }
+
+    if err := dm.registerWithConsul(resp.ID, containerIP, consulAddr); err != nil {
+        // Clean up the container if Consul registration fails
+        dm.cli.ContainerRemove(context.Background(), resp.ID, container.RemoveOptions{Force: true})
+        return nil, fmt.Errorf("container creation failed: unable to register with service discovery: %v", err)
     }
 
     endpoints := &ContainerEndpoints{
