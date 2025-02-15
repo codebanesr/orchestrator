@@ -52,17 +52,24 @@ func (dm *DockerManager) GetContainerStatus(id string) *ContainerStatus {
     return dm.containerStats.statuses[id]
 }
 
-func (dm *DockerManager) CreateContainerAsync(imageID string) (string, error) {
+// Add this type definition near other types
+type ContainerConfig struct {
+    ImageID     string     `json:"imageId"`
+    VNCConfig   config.VNCConfig  `json:"vncConfig,omitempty"`
+}
+
+// Update CreateContainerAsync to accept VNC configuration
+func (dm *DockerManager) CreateContainerAsync(configObj ContainerConfig) (string, error) {
     // Find the requested image
     var selectedImage string
     for _, img := range availableImages {
-        if img.ID == imageID {
+        if img.ID == configObj.ImageID {
             selectedImage = img.Name
             break
         }
     }
     if selectedImage == "" {
-        return "", fmt.Errorf("invalid image ID: %s", imageID)
+        return "", fmt.Errorf("invalid image ID: %s", configObj.ImageID)
     }
 
     containerID := utils.GenerateID()
@@ -75,12 +82,19 @@ func (dm *DockerManager) CreateContainerAsync(imageID string) (string, error) {
     }
     dm.containerStats.Unlock()
 
-    go dm.handleContainerCreation(shortID, selectedImage)
+    // Use default VNC config if none provided
+    vncConfig := configObj.VNCConfig
+    if vncConfig == (config.VNCConfig{}) {
+        vncConfig = dm.cfg.DefaultVNCConfig
+    }
+
+    go dm.handleContainerCreation(shortID, selectedImage, vncConfig)
 
     return shortID, nil
 }
 
-func (dm *DockerManager) handleContainerCreation(shortID string, imageName string) {
+// Update handleContainerCreation to pass VNC config
+func (dm *DockerManager) handleContainerCreation(shortID string, imageName string, vncConfig config.VNCConfig) {
     updateStatus := func(status, message string, err error) {
         dm.containerStats.Lock()
         defer dm.containerStats.Unlock()
@@ -93,7 +107,7 @@ func (dm *DockerManager) handleContainerCreation(shortID string, imageName strin
         }
     }
 
-    endpoints, err := dm.CreateContainer(imageName)
+    endpoints, err := dm.CreateContainer(imageName, vncConfig)
     if err != nil {
         updateStatus("failed", "Container creation failed", err)
         return
@@ -181,13 +195,23 @@ func (dm *DockerManager) ensureImageExists(imageName string) error {
     return nil
 }
 
-func (dm *DockerManager) CreateContainer(imageName string) (*ContainerEndpoints, error) {
+// Update CreateContainer to accept VNC configuration
+func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCConfig) (*ContainerEndpoints, error) {
     containerID := utils.GenerateID()
     shortID := containerID[:12]
     log.Printf("Creating new container with ID: %s using image: %s", shortID, imageName)
 
     if err := dm.ensureImageExists(imageName); err != nil {
         return nil, err
+    }
+
+    // Create environment variables for VNC configuration
+    env := []string{
+        fmt.Sprintf("VNC_PW=%s", vncConfig.Password),
+        fmt.Sprintf("VNC_RESOLUTION=%s", vncConfig.Resolution),
+        fmt.Sprintf("VNC_COL_DEPTH=%d", vncConfig.ColDepth),
+        fmt.Sprintf("VNC_VIEW_ONLY=%v", vncConfig.ViewOnly),
+        fmt.Sprintf("DISPLAY=%s", vncConfig.Display),
     }
 
     hostConfig := &container.HostConfig{
@@ -203,6 +227,7 @@ func (dm *DockerManager) CreateContainer(imageName string) (*ContainerEndpoints,
         &container.Config{
             Image:        imageName,
             ExposedPorts: nat.PortSet{"8080/tcp": struct{}{}, "9222/tcp": struct{}{}},
+            Env:         env,
         },
         hostConfig,
         nil,

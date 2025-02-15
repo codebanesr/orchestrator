@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/shanurrahman/orchestrator/config"
 	"github.com/shanurrahman/orchestrator/docker"
 )
 
@@ -31,7 +32,8 @@ type CreateContainerResponse struct {
 type CreateContainerRequest struct {
     // The ID of the image to use for the container
     // @example ubuntu-base
-    ImageID string `json:"image_id" validate:"required"`
+    ImageID     string            `json:"image_id" validate:"required"`
+    VNCConfig   config.VNCConfig  `json:"vnc_config,omitempty"`
 }
 
 // Add new handler
@@ -71,7 +73,12 @@ func CreateContainerHandler(dm *docker.DockerManager) http.HandlerFunc {
             return
         }
 
-        containerID, err := dm.CreateContainerAsync(req.ImageID)
+        config := docker.ContainerConfig{
+            ImageID:   req.ImageID,
+            VNCConfig: req.VNCConfig,
+        }
+
+        containerID, err := dm.CreateContainerAsync(config)
         if err != nil {
             log.Printf("Error initiating container creation: %v", err)
             http.Error(w, err.Error(), http.StatusBadRequest)

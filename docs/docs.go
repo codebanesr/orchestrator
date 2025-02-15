@@ -136,6 +136,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "config.VNCConfig": {
+            "type": "object",
+            "properties": {
+                "colDepth": {
+                    "type": "integer"
+                },
+                "display": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "resolution": {
+                    "type": "string"
+                },
+                "viewOnly": {
+                    "type": "boolean"
+                }
+            }
+        },
         "docker.ContainerEndpoints": {
             "type": "object",
             "properties": {
@@ -200,6 +220,9 @@ const docTemplate = `{
                 "image_id": {
                     "description": "The ID of the image to use for the container\n@example ubuntu-base",
                     "type": "string"
+                },
+                "vnc_config": {
+                    "$ref": "#/definitions/config.VNCConfig"
                 }
             }
         },
