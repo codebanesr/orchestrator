@@ -1,11 +1,14 @@
 package config
 
+import "os"
+
 type Config struct {
     TraefikNetwork   string
     Domain           string
     LetsEncryptEmail string
     AuthCredentials  string // Basic auth in htpasswd format
     DefaultVNCConfig VNCConfig
+    BehindProxy bool
 }
 
 type VNCConfig struct {
@@ -22,6 +25,7 @@ func Load() *Config {
         Domain:           "yourdomain.com",
         LetsEncryptEmail: "admin@yourdomain.com",
         AuthCredentials:  "user:$apr1$...", // Generated htpasswd
+        BehindProxy:      os.Getenv("BEHIND_PROXY") == "true",
         DefaultVNCConfig: VNCConfig{
             Password:   "headless",
             Resolution: "1360x768",

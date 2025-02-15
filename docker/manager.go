@@ -317,9 +317,9 @@ func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCC
     containerIP := inspect.NetworkSettings.Networks[dm.network].IPAddress
 
     // Register services with Consul using environment variable for Consul address
-    consulAddr := os.Getenv("FABIO_REGISTRY_CONSUL_ADDR")
+    consulAddr := os.Getenv("CONSUL_HTTP_ADDR")
     if consulAddr == "" {
-        consulAddr = "consul:8500" // fallback to default
+        consulAddr = "localhost:8500" // fallback to default
     }
 
     if err := dm.registerWithConsul(resp.ID, containerIP, consulAddr); err != nil {

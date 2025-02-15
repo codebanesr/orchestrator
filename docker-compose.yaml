@@ -4,6 +4,8 @@ services:
     ports:
       - "8500:8500"
     command: "agent -dev -client=0.0.0.0"
+    networks:
+      - fabio_network
     
   fabio:
     image: fabiolb/fabio
@@ -14,6 +16,8 @@ services:
       - FABIO_REGISTRY_CONSUL_ADDR=consul:8500
     depends_on:
       - consul
+    networks:
+      - fabio_network
 
   orchestrator:
     build: .
@@ -22,8 +26,17 @@ services:
       - "8090"
     environment:
       - CONSUL_HTTP_ADDR=consul:8500
+      - BEHIND_PROXY=true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - consul
       - fabio
+    networks:
+      - fabio_network
+
+networks:
+  fabio_network:
+    external: true
+
+

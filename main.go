@@ -47,15 +47,23 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 	
 	// Health check endpoint
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+	healthHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
-	})
+	}
+	r.Get("/health", healthHandler)
+	r.Head("/health", healthHandler)
 	
 	// Serve Swagger documentation
+	swaggerURL := "/swagger/doc.json"
+	if cfg.BehindProxy {  // Add this configuration in your config package
+		swaggerURL = "swagger/doc.json"
+	}
 	r.Handle("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
+		httpSwagger.URL(swaggerURL),
+		httpSwagger.DeepLinking(true),
+		httpSwagger.DocExpansion("none"),
 	))
-	
+
 	// Register API routes
 	// Modify the routes section
 	r.Route("/containers", func(r chi.Router) {
