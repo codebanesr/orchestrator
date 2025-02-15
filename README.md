@@ -132,20 +132,26 @@ Our platform is highly configurable. The options below let you fine-tune the beh
 
 ### 🔧 Environment Variables
 
-| Variable           | Description                                                                                                                                                                   |
-| :-----------------:| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CUSTOM_PORT        | Override the default HTTP port (3000) for the container.                                                                                                                    |
-| CUSTOM_HTTPS_PORT  | Override the default HTTPS port (3001) for the container.                                                                                                                     |
-| CUSTOM_USER        | HTTP Basic auth username (default: `abc`).                                                                                                                                    |
+| Variable           | Description                                                                |
+| :---------------: | -------------------------------------------------------------------------- |
+| IMAGE_ID          | ID of the container image to use (e.g., `ubuntu-base`, `debian-chromium`)  |
+| VNC_PASSWORD      | Password for VNC connection access                                          |
+| VNC_RESOLUTION    | Screen resolution for the virtual display (e.g., `1920x1080`)              |
+| VNC_COL_DEPTH     | Color depth for the VNC connection (e.g., 24, 32)                          |
+| VNC_DISPLAY       | X11 display number (e.g., `:1`)                                            |
+| VNC_VIEW_ONLY     | Set to `true` to disable input to the VNC session                          |
+| CUSTOM_PORT        | Override the default HTTP port (3000) for the container.                                                                                                    |
+| CUSTOM_HTTPS_PORT  | Override the default HTTPS port (3001) for the container.                                                                                                     |
+| CUSTOM_USER        | HTTP Basic auth username (default: `abc`).                                                                                                                    |
 | PASSWORD           | HTTP Basic auth password (default: `abc`). If unset, authentication is disabled.                                                                                              |
 | SUBFOLDER          | Subfolder path if running behind a reverse proxy (format: `/subfolder/`).                                                                                                      |
 | TITLE              | Browser window title (default: **Virtual Browser Client**).                                                                                                                   |
-| FM_HOME            | Home directory for the file manager (default: `/config`).                                                                                                                     |
+| FM_HOME            | Home directory for the file manager (default: `/config`).                                                                                                     |
 | START_DOCKER       | Set to `false` to disable auto-start of the Docker-in-Docker (DinD) setup.                                                                                                    |
 | DRINODE            | Specify the GPU device for [DRI3 GPU Acceleration](https://www.kasmweb.com/kasmvnc/docs/master/gpu_acceleration.html) (e.g., `/dev/dri/renderD128`).                     |
-| DISABLE_IPV6       | Disable IPv6 if set to any value.                                                                                                                                             |
-| LC_ALL             | Locale setting (e.g., `fr_FR.UTF-8` or `ar_AE.UTF-8`).                                                                                                                         |
-| NO_DECOR           | Run without window borders (ideal for PWA setups).                                                                                                                            |
+| DISABLE_IPV6       | Disable IPv6 if set to any value.                                                                                                                             |
+| LC_ALL             | Locale setting (e.g., `fr_FR.UTF-8` or `ar_AE.UTF-8`).                                                                                                         |
+| NO_DECOR           | Run without window borders (ideal for PWA setups).                                                                                                            |
 | NO_FULL            | Prevents applications from auto-fullscreen when using the window manager.                                                                                                     |
 
 ### ⚙️ Run Configurations
