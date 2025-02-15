@@ -25,14 +25,33 @@ type CreateContainerResponse struct {
     StatusURL   string `json:"status_url"`
 }
 
+// Add new types
+type CreateContainerRequest struct {
+    ImageID string `json:"image_id" validate:"required"`
+}
+
+// Add new handler
+func ListImagesHandler(dm *docker.DockerManager) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        images := dm.ListAvailableImages()
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(images)
+    }
+}
+
+// Modify CreateContainerHandler
 func CreateContainerHandler(dm *docker.DockerManager) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        log.Printf("Received request to create container from %s", r.RemoteAddr)
+        var req CreateContainerRequest
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+            http.Error(w, "Invalid request body", http.StatusBadRequest)
+            return
+        }
 
-        containerID, err := dm.CreateContainerAsync()
+        containerID, err := dm.CreateContainerAsync(req.ImageID)
         if err != nil {
             log.Printf("Error initiating container creation: %v", err)
-            http.Error(w, "Failed to initiate container creation", http.StatusInternalServerError)
+            http.Error(w, err.Error(), http.StatusBadRequest)
             return
         }
 

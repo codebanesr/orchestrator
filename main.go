@@ -42,9 +42,11 @@ func main() {
 	))
 	
 	// Register API routes
+	// Modify the routes section
 	r.Route("/containers", func(r chi.Router) {
-		r.Post("/", handlers.CreateContainerHandler(dockerClient))
-		r.Get("/{id}/status", handlers.GetContainerStatusHandler(dockerClient))
+	    r.Get("/images", handlers.ListImagesHandler(dockerClient))
+	    r.Post("/", handlers.CreateContainerHandler(dockerClient))
+	    r.Get("/{id}/status", handlers.GetContainerStatusHandler(dockerClient))
 	})
 	
 	// Configure server with timeouts

@@ -1,16 +1,15 @@
 package docker
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"log"
-	"sync"
-
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
+
+	"fmt"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
@@ -20,25 +19,12 @@ import (
 	"github.com/shanurrahman/orchestrator/utils"
 )
 
-// Add these types at the top with other types
-type ContainerStatus struct {
-    Status      string `json:"status"`
-    Message     string `json:"message"`
-    Endpoints   *ContainerEndpoints `json:"endpoints,omitempty"`
-    Error       string `json:"error,omitempty"`
-}
-
-type containerStatusMap struct {
-    sync.RWMutex
-    statuses map[string]*ContainerStatus
-}
-
-// Add this to DockerManager struct
+// DockerManager handles container operations
 type DockerManager struct {
-    cli            *client.Client
-    cfg            *config.Config
-    network        string
-    containerStats containerStatusMap
+	cli            *client.Client
+	cfg            *config.Config
+	network        string
+	containerStats containerStatusMap
 }
 
 // Update NewDockerManager
@@ -66,11 +52,22 @@ func (dm *DockerManager) GetContainerStatus(id string) *ContainerStatus {
     return dm.containerStats.statuses[id]
 }
 
-func (dm *DockerManager) CreateContainerAsync() (string, error) {
+func (dm *DockerManager) CreateContainerAsync(imageID string) (string, error) {
+    // Find the requested image
+    var selectedImage string
+    for _, img := range availableImages {
+        if img.ID == imageID {
+            selectedImage = img.Name
+            break
+        }
+    }
+    if selectedImage == "" {
+        return "", fmt.Errorf("invalid image ID: %s", imageID)
+    }
+
     containerID := utils.GenerateID()
     shortID := containerID[:12]
 
-    // Initialize status
     dm.containerStats.Lock()
     dm.containerStats.statuses[shortID] = &ContainerStatus{
         Status:  "initializing",
@@ -78,17 +75,15 @@ func (dm *DockerManager) CreateContainerAsync() (string, error) {
     }
     dm.containerStats.Unlock()
 
-    // Start async container creation
-    go dm.handleContainerCreation(shortID)
+    go dm.handleContainerCreation(shortID, selectedImage)
 
     return shortID, nil
 }
 
-func (dm *DockerManager) handleContainerCreation(shortID string) {
+func (dm *DockerManager) handleContainerCreation(shortID string, imageName string) {
     updateStatus := func(status, message string, err error) {
         dm.containerStats.Lock()
         defer dm.containerStats.Unlock()
-        
         if s, exists := dm.containerStats.statuses[shortID]; exists {
             s.Status = status
             s.Message = message
@@ -98,8 +93,7 @@ func (dm *DockerManager) handleContainerCreation(shortID string) {
         }
     }
 
-    // Create container using existing logic
-    endpoints, err := dm.CreateContainer()
+    endpoints, err := dm.CreateContainer(imageName)
     if err != nil {
         updateStatus("failed", "Container creation failed", err)
         return
@@ -109,18 +103,6 @@ func (dm *DockerManager) handleContainerCreation(shortID string) {
     dm.containerStats.Lock()
     dm.containerStats.statuses[shortID].Endpoints = endpoints
     dm.containerStats.Unlock()
-}
-
-type ConsulServiceRegistration struct {
-    Name    string   `json:"Name"`
-    ID      string   `json:"ID"`
-    Address string   `json:"Address"`
-    Port    int      `json:"Port"`
-    Tags    []string `json:"Tags"`
-    Check   struct {
-        HTTP     string `json:"HTTP"`
-        Interval string `json:"Interval"`
-    } `json:"Check"`
 }
 
 func (dm *DockerManager) registerWithConsul(containerID string, containerIP string) error {
@@ -146,40 +128,32 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
     debugRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/", containerIP)
     debugRegistration.Check.Interval = "10s"
 
-	// Register both services
-	for _, registration := range []ConsulServiceRegistration{uiRegistration, debugRegistration} {
-		jsonData, err := json.Marshal(registration)
-		if err != nil {
-			return fmt.Errorf("failed to marshal registration data: %v", err)
-		}
+    // Register both services
+    for _, registration := range []ConsulServiceRegistration{uiRegistration, debugRegistration} {
+        jsonData, err := json.Marshal(registration)
+        if err != nil {
+            return fmt.Errorf("failed to marshal registration data: %v", err)
+        }
 
-		resp, err := http.DefaultClient.Do(&http.Request{
-			Method: "PUT",
-			URL:    &url.URL{Scheme: "http", Host: "localhost:8500", Path: "/v1/agent/service/register"},
-			Body:   io.NopCloser(bytes.NewReader(jsonData)),
-		})
-		if err != nil {
-			return fmt.Errorf("failed to register service: %v", err)
-		}
-		defer resp.Body.Close()
+        resp, err := http.DefaultClient.Do(&http.Request{
+            Method: "PUT",
+            URL:    &url.URL{Scheme: "http", Host: "localhost:8500", Path: "/v1/agent/service/register"},
+            Body:   io.NopCloser(bytes.NewReader(jsonData)),
+        })
+        if err != nil {
+            return fmt.Errorf("failed to register service: %v", err)
+        }
+        defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to register service, status: %d", resp.StatusCode)
-		}
-	}
+        if resp.StatusCode != http.StatusOK {
+            return fmt.Errorf("failed to register service, status: %d", resp.StatusCode)
+        }
+    }
 
-	log.Printf("Successfully registered container %s services with Consul", containerID[:12])
-	return nil
+    log.Printf("Successfully registered container %s services with Consul", containerID[:12])
+    return nil
 }
 
-// Add this new type at the top with other types
-type ContainerEndpoints struct {
-    ContainerID  string `json:"container_id"`
-    UIPath       string `json:"ui_path"`
-    DebugPath    string `json:"debug_path"`
-}
-
-// Modify the CreateContainer function signature and return
 func (dm *DockerManager) ensureImageExists(imageName string) error {
     // Check if image exists locally
     _, _, err := dm.cli.ImageInspectWithRaw(context.Background(), imageName)
@@ -207,13 +181,11 @@ func (dm *DockerManager) ensureImageExists(imageName string) error {
     return nil
 }
 
-func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
+func (dm *DockerManager) CreateContainer(imageName string) (*ContainerEndpoints, error) {
     containerID := utils.GenerateID()
     shortID := containerID[:12]
-    log.Printf("Creating new container with ID: %s", shortID)
+    log.Printf("Creating new container with ID: %s using image: %s", shortID, imageName)
 
-    // Ensure image exists before creating container
-    imageName := "shanurcsenitap/vnc_chrome_debug:latest"
     if err := dm.ensureImageExists(imageName); err != nil {
         return nil, err
     }
@@ -229,7 +201,7 @@ func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
     resp, err := dm.cli.ContainerCreate(
         context.Background(),
         &container.Config{
-            Image:        "shanurcsenitap/vnc_chrome_debug:latest",
+            Image:        imageName,
             ExposedPorts: nat.PortSet{"8080/tcp": struct{}{}, "9222/tcp": struct{}{}},
         },
         hostConfig,
@@ -267,4 +239,144 @@ func (dm *DockerManager) CreateContainer() (*ContainerEndpoints, error) {
     }
 
     return endpoints, nil
+}
+// Add at the top after type definitions
+type ImageInfo struct {
+    ID          string   `json:"id"`
+    Name        string   `json:"name"`
+    Description string   `json:"description"`
+    Category    string   `json:"category"`
+    Tags        []string `json:"tags"`
+}
+
+var availableImages = []ImageInfo{
+    // Generic Ubuntu images
+    {
+        ID:          "ubuntu-base",
+        Name:        "accetto/ubuntu-vnc-xfce-g3",
+        Description: "Base Ubuntu with VNC and Xfce",
+        Category:    "Generic Ubuntu",
+        Tags:        []string{"ubuntu", "base", "xfce"},
+    },
+    {
+        ID:          "ubuntu-chromium",
+        Name:        "accetto/ubuntu-vnc-xfce-chromium-g3",
+        Description: "Ubuntu with Chromium browser",
+        Category:    "Generic Ubuntu",
+        Tags:        []string{"ubuntu", "chromium", "browser"},
+    },
+    {
+        ID:          "ubuntu-firefox",
+        Name:        "accetto/ubuntu-vnc-xfce-firefox-g3",
+        Description: "Ubuntu with Firefox browser",
+        Category:    "Generic Ubuntu",
+        Tags:        []string{"ubuntu", "firefox", "browser"},
+    },
+    // Ubuntu with OpenGL support
+    {
+        ID:          "ubuntu-opengl",
+        Name:        "accetto/ubuntu-vnc-xfce-opengl-g3",
+        Description: "Ubuntu with Mesa3D and VirtualGL support",
+        Category:    "Generic Ubuntu",
+        Tags:        []string{"ubuntu", "opengl", "graphics", "3d"},
+    },
+    // Generic Debian images
+    {
+        ID:          "debian-base",
+        Name:        "accetto/debian-vnc-xfce-g3",
+        Description: "Base Debian with VNC and Xfce",
+        Category:    "Generic Debian",
+        Tags:        []string{"debian", "base", "xfce"},
+    },
+    {
+        ID:          "debian-chromium",
+        Name:        "accetto/debian-vnc-xfce-chromium-g3",
+        Description: "Debian with Chromium browser",
+        Category:    "Generic Debian",
+        Tags:        []string{"debian", "chromium", "browser"},
+    },
+    {
+        ID:          "debian-firefox",
+        Name:        "accetto/debian-vnc-xfce-firefox-g3",
+        Description: "Debian with Firefox browser",
+        Category:    "Generic Debian",
+        Tags:        []string{"debian", "firefox", "browser"},
+    },
+    // Drawing and Graphics
+    {
+        ID:          "ubuntu-blender",
+        Name:        "accetto/ubuntu-vnc-xfce-blender-g3",
+        Description: "Ubuntu with Blender for 3D modeling",
+        Category:    "Graphics and Modeling",
+        Tags:        []string{"ubuntu", "blender", "3d", "modeling"},
+    },
+    {
+        ID:          "ubuntu-drawio",
+        Name:        "accetto/ubuntu-vnc-xfce-drawio-g3",
+        Description: "Ubuntu with Draw.io for diagrams",
+        Category:    "Graphics and Modeling",
+        Tags:        []string{"ubuntu", "drawio", "diagrams"},
+    },
+    {
+        ID:          "ubuntu-freecad",
+        Name:        "accetto/ubuntu-vnc-xfce-freecad-g3",
+        Description: "Ubuntu with FreeCAD for CAD modeling",
+        Category:    "Graphics and Modeling",
+        Tags:        []string{"ubuntu", "freecad", "cad", "modeling"},
+    },
+    {
+        ID:          "ubuntu-gimp",
+        Name:        "accetto/ubuntu-vnc-xfce-gimp-g3",
+        Description: "Ubuntu with GIMP for image editing",
+        Category:    "Graphics and Modeling",
+        Tags:        []string{"ubuntu", "gimp", "image-editing"},
+    },
+    {
+        ID:          "ubuntu-inkscape",
+        Name:        "accetto/ubuntu-vnc-xfce-inkscape-g3",
+        Description: "Ubuntu with Inkscape for vector graphics",
+        Category:    "Graphics and Modeling",
+        Tags:        []string{"ubuntu", "inkscape", "vector-graphics"},
+    },
+    // Development Tools
+    {
+        ID:          "debian-nodejs",
+        Name:        "accetto/debian-vnc-xfce-nodejs-g3",
+        Description: "Debian with Node.js development environment",
+        Category:    "Development",
+        Tags:        []string{"debian", "nodejs", "development", "javascript"},
+    },
+    {
+        ID:          "debian-nvm",
+        Name:        "accetto/debian-vnc-xfce-nvm-g3",
+        Description: "Debian with NVM for Node.js version management",
+        Category:    "Development",
+        Tags:        []string{"debian", "nvm", "nodejs", "development"},
+    },
+    {
+        ID:          "debian-postman",
+        Name:        "accetto/debian-vnc-xfce-postman-g3",
+        Description: "Debian with Postman for API testing",
+        Category:    "Development",
+        Tags:        []string{"debian", "postman", "api-testing"},
+    },
+    {
+        ID:          "debian-python",
+        Name:        "accetto/debian-vnc-xfce-python-g3",
+        Description: "Debian with Python development environment",
+        Category:    "Development",
+        Tags:        []string{"debian", "python", "development"},
+    },
+    {
+        ID:          "debian-vscode",
+        Name:        "accetto/debian-vnc-xfce-vscode-g3",
+        Description: "Debian with Visual Studio Code",
+        Category:    "Development",
+        Tags:        []string{"debian", "vscode", "ide", "development"},
+    },
+}
+
+// Add this method to DockerManager
+func (dm *DockerManager) ListAvailableImages() []ImageInfo {
+    return availableImages
 }
