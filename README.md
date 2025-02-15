@@ -206,7 +206,7 @@ For Enterprise Support, please contact: **contact@orchestrator.dev**
 **A:** Instead of merely coordinating shared browser sessions, our platform spins up fully isolated virtual Linux containers running full desktops & browsers that you control externally—delivering enhanced security, flexibility, and performance.
 
 ### Q: Can I use browsers other than Chrome?
-**A:** Our solution is optimized for Chrome. However, support for additional browsers (such as Firefox) is on our roadmap.
+**A:** Yes! We currently support both Chrome and Firefox browsers through our specialized container images (`ubuntu-chromium`, `ubuntu-firefox`, `debian-chromium`, `debian-firefox`). Each browser comes with full VNC support and debugging capabilities. You can select your preferred browser by specifying the appropriate image ID when creating a container.
 
 ### Q: What’s the maximum cluster size?
 **A:** We’ve successfully tested clusters of up to 100 nodes handling 10k concurrent sessions.

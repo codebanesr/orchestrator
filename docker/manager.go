@@ -120,30 +120,41 @@ func (dm *DockerManager) handleContainerCreation(shortID string, imageName strin
 }
 
 func (dm *DockerManager) registerWithConsul(containerID string, containerIP string) error {
-    // Register UI endpoint (VNC viewer)
-    uiRegistration := ConsulServiceRegistration{
-        Name:    fmt.Sprintf("chrome-ui-%s", containerID[:12]),
-        ID:      fmt.Sprintf("chrome-ui-%s", containerID[:12]),
+    // Register Chat Commands endpoint
+    chatRegistration := ConsulServiceRegistration{
+        Name:    fmt.Sprintf("chat-api-%s", containerID[:12]),
+        ID:      fmt.Sprintf("chat-api-%s", containerID[:12]),
         Address: containerIP,
         Port:    8080,
-        Tags:    []string{fmt.Sprintf("urlprefix-/%s/", containerID[:12])},
+        Tags:    []string{fmt.Sprintf("urlprefix-/%s/chat/", containerID[:12])},
     }
-    uiRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/", containerIP)
-    uiRegistration.Check.Interval = "10s"
+    chatRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/health", containerIP)
+    chatRegistration.Check.Interval = "10s"
 
-    // Register Debug endpoint
-    debugRegistration := ConsulServiceRegistration{
-        Name:    fmt.Sprintf("chrome-debug-%s", containerID[:12]),
-        ID:      fmt.Sprintf("chrome-debug-%s", containerID[:12]),
+    // Register noVNC endpoint
+    novncRegistration := ConsulServiceRegistration{
+        Name:    fmt.Sprintf("novnc-%s", containerID[:12]),
+        ID:      fmt.Sprintf("novnc-%s", containerID[:12]),
         Address: containerIP,
-        Port:    9222,
-        Tags:    []string{fmt.Sprintf("urlprefix-/%s/debug/", containerID[:12])},
+        Port:    6901,
+        Tags:    []string{fmt.Sprintf("urlprefix-/%s/novnc/", containerID[:12])},
     }
-    debugRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/", containerIP)
-    debugRegistration.Check.Interval = "10s"
+    novncRegistration.Check.TCP = fmt.Sprintf("%s:6901", containerIP)
+    novncRegistration.Check.Interval = "10s"
 
-    // Register both services
-    for _, registration := range []ConsulServiceRegistration{uiRegistration, debugRegistration} {
+    // Register VNC endpoint
+    vncRegistration := ConsulServiceRegistration{
+        Name:    fmt.Sprintf("vnc-%s", containerID[:12]),
+        ID:      fmt.Sprintf("vnc-%s", containerID[:12]),
+        Address: containerIP,
+        Port:    5901,
+        Tags:    []string{fmt.Sprintf("urlprefix-/%s/vnc/", containerID[:12])},
+    }
+    vncRegistration.Check.TCP = fmt.Sprintf("%s:5901", containerIP)
+    vncRegistration.Check.Interval = "10s"
+
+    // Register all services
+    for _, registration := range []ConsulServiceRegistration{chatRegistration, novncRegistration, vncRegistration} {
         jsonData, err := json.Marshal(registration)
         if err != nil {
             return fmt.Errorf("failed to marshal registration data: %v", err)
@@ -205,19 +216,35 @@ func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCC
         return nil, err
     }
 
+    // Generate random password if not provided
+    if vncConfig.Password == "" {
+        vncConfig.Password = utils.GenerateID()[:12] // Use first 12 chars as password
+    }
+
     // Create environment variables for VNC configuration
     env := []string{
         fmt.Sprintf("VNC_PW=%s", vncConfig.Password),
-        fmt.Sprintf("VNC_RESOLUTION=%s", vncConfig.Resolution),
-        fmt.Sprintf("VNC_COL_DEPTH=%d", vncConfig.ColDepth),
-        fmt.Sprintf("VNC_VIEW_ONLY=%v", vncConfig.ViewOnly),
-        fmt.Sprintf("DISPLAY=%s", vncConfig.Display),
+    }
+
+    // Add optional VNC configurations only if they are set
+    if vncConfig.Resolution != "" {
+        env = append(env, fmt.Sprintf("VNC_RESOLUTION=%s", vncConfig.Resolution))
+    }
+    if vncConfig.ColDepth != 0 {
+        env = append(env, fmt.Sprintf("VNC_COL_DEPTH=%d", vncConfig.ColDepth))
+    }
+    if vncConfig.Display != "" {
+        env = append(env, fmt.Sprintf("DISPLAY=%s", vncConfig.Display))
+    }
+    if vncConfig.ViewOnly {
+        env = append(env, fmt.Sprintf("VNC_VIEW_ONLY=%v", vncConfig.ViewOnly))
     }
 
     hostConfig := &container.HostConfig{
         PortBindings: nat.PortMap{
-            "8080/tcp": []nat.PortBinding{{HostPort: ""}}, // VNC viewer port
-            "9222/tcp": []nat.PortBinding{{HostPort: ""}}, // Debug port
+            "8080/tcp": []nat.PortBinding{{HostPort: ""}}, // Chat API port
+            "6901/tcp": []nat.PortBinding{{HostPort: ""}}, // noVNC port
+            "5901/tcp": []nat.PortBinding{{HostPort: ""}}, // VNC port
         },
         NetworkMode: container.NetworkMode(dm.network),
     }
@@ -225,9 +252,13 @@ func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCC
     resp, err := dm.cli.ContainerCreate(
         context.Background(),
         &container.Config{
-            Image:        imageName,
-            ExposedPorts: nat.PortSet{"8080/tcp": struct{}{}, "9222/tcp": struct{}{}},
-            Env:         env,
+            Image: imageName,
+            ExposedPorts: nat.PortSet{
+                "8080/tcp": struct{}{},
+                "6901/tcp": struct{}{},
+                "5901/tcp": struct{}{},
+            },
+            Env: env,
         },
         hostConfig,
         nil,
@@ -258,9 +289,10 @@ func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCC
     }
 
     endpoints := &ContainerEndpoints{
-        ContainerID: shortID,
-        UIPath:      fmt.Sprintf("/%s/", shortID),
-        DebugPath:   fmt.Sprintf("/%s/debug/", shortID),
+        ContainerID:  shortID,
+        ChatAPIPath:  fmt.Sprintf("/%s/chat/", shortID),
+        NoVNCPath:    fmt.Sprintf("/%s/novnc/vnc_lite.html?password=%s", shortID, vncConfig.Password),
+        VNCPath:      fmt.Sprintf("/%s/novnc/vnc.html?password=%s", shortID, vncConfig.Password),
     }
 
     return endpoints, nil

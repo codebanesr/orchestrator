@@ -18,20 +18,22 @@ type containerStatusMap struct {
 
 // ContainerEndpoints holds the routing information for a container
 type ContainerEndpoints struct {
-	ContainerID string `json:"container_id"`
-	UIPath     string `json:"ui_path"`
-	DebugPath  string `json:"debug_path"`
+    ContainerID  string `json:"container_id"`
+    ChatAPIPath  string `json:"chat_api_path"`
+    NoVNCPath    string `json:"novnc_path"`
+    VNCPath      string `json:"vnc_path"`
 }
 
 // ConsulServiceRegistration represents the registration payload for Consul
 type ConsulServiceRegistration struct {
-	Name    string   `json:"Name"`
-	ID      string   `json:"ID"`
-	Address string   `json:"Address"`
-	Port    int      `json:"Port"`
-	Tags    []string `json:"Tags"`
-	Check   struct {
-		HTTP     string `json:"HTTP"`
-		Interval string `json:"Interval"`
-	} `json:"Check"`
+    Name    string   `json:"Name"`
+    ID      string   `json:"ID"`
+    Address string   `json:"Address"`
+    Port    int      `json:"Port"`
+    Tags    []string `json:"Tags"`
+    Check   struct {
+        HTTP     string `json:"HTTP,omitempty"`
+        TCP      string `json:"TCP,omitempty"`
+        Interval string `json:"Interval"`
+    } `json:"Check"`
 }
