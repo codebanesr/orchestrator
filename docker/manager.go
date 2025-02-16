@@ -147,8 +147,7 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
         Address: containerIP,
         Port:    8080,
         Tags:    []string{
-            fmt.Sprintf("urlprefix-/%s/chat/", shortID),
-            fmt.Sprintf("strip=/%s/chat/", shortID),
+            fmt.Sprintf("urlprefix-/%s/chat/ strip=/%s/chat/", shortID, shortID),
         },
     }
     chatRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/health", containerIP)
@@ -161,8 +160,7 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
         Address: containerIP,
         Port:    6901,
         Tags:    []string{
-            fmt.Sprintf("urlprefix-/%s/novnc/", shortID),
-            fmt.Sprintf("strip=/%s/novnc/", shortID),
+            fmt.Sprintf("urlprefix-/%s/novnc/ strip=/%s/novnc/", shortID, shortID),
         },
     }
     novncRegistration.Check.TCP = fmt.Sprintf("%s:6901", containerIP)
@@ -175,8 +173,7 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
         Address: containerIP,
         Port:    5901,
         Tags:    []string{
-            fmt.Sprintf("urlprefix-/%s/vnc/", shortID),
-            fmt.Sprintf("strip=/%s/vnc/", shortID),
+            fmt.Sprintf("urlprefix-/%s/vnc/ strip=/%s/vnc/", shortID, shortID),
         },
     }
     vncRegistration.Check.TCP = fmt.Sprintf("%s:5901", containerIP)
