@@ -211,6 +211,14 @@ For Enterprise Support, please contact: **contact@orchestrator.dev**
 ### Q: What’s the maximum cluster size?
 **A:** We’ve successfully tested clusters of up to 100 nodes handling 10k concurrent sessions.
 
+### Container Lifecycle Management
+- **Automatic Container Cleanup**: The system automatically monitors Docker events and cleans up container status entries when:
+  - Containers are stopped
+  - Containers die unexpectedly
+  - Containers are killed
+  - Containers are destroyed
+- This ensures efficient memory usage by preventing stale container status entries from accumulating.
+
 ---
 
 <div align="center" style="color: #1a5c1a;">

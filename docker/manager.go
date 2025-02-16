@@ -65,7 +65,7 @@ func NewDockerManager(cfg *config.Config) *DockerManager {
         log.Printf("Created Docker network: %s", networkName)
     }
 
-    return &DockerManager{
+    dm := &DockerManager{
         cli:     cli,
         cfg:     cfg,
         network: networkName,
@@ -73,6 +73,11 @@ func NewDockerManager(cfg *config.Config) *DockerManager {
             statuses: make(map[string]*ContainerStatus),
         },
     }
+
+    // Start the event listener with a background context
+    dm.StartEventListener(context.Background())
+
+    return dm
 }
 
 // Add these new methods
