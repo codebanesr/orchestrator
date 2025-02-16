@@ -161,6 +161,7 @@ func (dm *DockerManager) registerWithConsul(containerID string, containerIP stri
         Port:    6901,
         Tags:    []string{
             fmt.Sprintf("urlprefix-/%s/novnc/ strip=/%s/novnc/", shortID, shortID),
+            fmt.Sprintf("urlprefix-/%s/novnc/websockify strip=/%s/novnc/websockify", shortID, shortID),
         },
     }
     novncRegistration.Check.TCP = fmt.Sprintf("%s:6901", containerIP)
@@ -328,11 +329,12 @@ func (dm *DockerManager) CreateContainer(imageName string, vncConfig config.VNCC
         return nil, fmt.Errorf("container creation failed: unable to register with service discovery: %v", err)
     }
 
+    // In CreateContainer method, update the endpoints
     endpoints := &ContainerEndpoints{
         ContainerID:  shortID,
         ChatAPIPath:  fmt.Sprintf("/%s/chat/", shortID),
-        NoVNCPath:    fmt.Sprintf("/%s/novnc/vnc_lite.html?password=%s", shortID, vncConfig.Password),
-        VNCPath:      fmt.Sprintf("/%s/novnc/vnc.html?password=%s", shortID, vncConfig.Password),
+        NoVNCPath:    fmt.Sprintf("/%s/novnc/vnc_lite.html?password=%s&path=%s/novnc/websockify", shortID, vncConfig.Password, shortID),
+        VNCPath:      fmt.Sprintf("/%s/novnc/vnc.html?password=%s&path=%s/novnc/websockify", shortID, vncConfig.Password, shortID),
     }
 
     return endpoints, nil
