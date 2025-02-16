@@ -79,6 +79,7 @@ func main() {
 	    r.Get("/images", handlers.ListImagesHandler(dockerClient))
 	    r.Post("/", handlers.CreateContainerHandler(dockerClient))
 	    r.Get("/{id}/status", handlers.GetContainerStatusHandler(dockerClient))
+	    r.Delete("/{id}/kill", handlers.KillContainerHandler(dockerClient))
 	})
 	
 	// Configure server with timeouts

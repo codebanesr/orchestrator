@@ -119,3 +119,22 @@ func GetContainerStatusHandler(dm *docker.DockerManager) http.HandlerFunc {
         json.NewEncoder(w).Encode(status)
     }
 }
+
+func KillContainerHandler(dm *docker.DockerManager) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        containerID := chi.URLParam(r, "id")
+        if containerID == "" {
+            http.Error(w, "container ID is required", http.StatusBadRequest)
+            return
+        }
+
+        err := dm.KillContainer(containerID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(map[string]string{"message": "Container killed successfully"})
+    }
+}
