@@ -12,7 +12,6 @@ import (
 
 	"fmt"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
@@ -56,7 +55,7 @@ func NewDockerManager(cfg *config.Config) *DockerManager {
     }
 
     if !networkExists {
-        _, err := cli.NetworkCreate(context.Background(), networkName, types.NetworkCreate{
+        _, err := cli.NetworkCreate(context.Background(), networkName, network.CreateOptions{
             Driver: "bridge",
         })
         if err != nil {
@@ -139,35 +138,46 @@ func (dm *DockerManager) CreateContainerAsync(configObj ContainerConfig) (string
 }
 
 func (dm *DockerManager) registerWithConsul(containerID string, containerIP string, consulAddr string) error {
+    shortID := containerID[:12]
+    
     // Register Chat Commands endpoint
     chatRegistration := ConsulServiceRegistration{
-        Name:    fmt.Sprintf("chat-api-%s", containerID[:12]),
-        ID:      fmt.Sprintf("chat-api-%s", containerID[:12]),
+        Name:    fmt.Sprintf("chat-api-%s", shortID),
+        ID:      fmt.Sprintf("chat-api-%s", shortID),
         Address: containerIP,
         Port:    8080,
-        Tags:    []string{fmt.Sprintf("urlprefix-/%s/chat/", containerID[:12])},
+        Tags:    []string{
+            fmt.Sprintf("urlprefix-/%s/chat/", shortID),
+            fmt.Sprintf("strip=/%s/chat/", shortID),
+        },
     }
     chatRegistration.Check.HTTP = fmt.Sprintf("http://%s:8080/health", containerIP)
     chatRegistration.Check.Interval = "10s"
 
     // Register noVNC endpoint
     novncRegistration := ConsulServiceRegistration{
-        Name:    fmt.Sprintf("novnc-%s", containerID[:12]),
-        ID:      fmt.Sprintf("novnc-%s", containerID[:12]),
+        Name:    fmt.Sprintf("novnc-%s", shortID),
+        ID:      fmt.Sprintf("novnc-%s", shortID),
         Address: containerIP,
         Port:    6901,
-        Tags:    []string{fmt.Sprintf("urlprefix-/%s/novnc/", containerID[:12])},
+        Tags:    []string{
+            fmt.Sprintf("urlprefix-/%s/novnc/", shortID),
+            fmt.Sprintf("strip=/%s/novnc/", shortID),
+        },
     }
     novncRegistration.Check.TCP = fmt.Sprintf("%s:6901", containerIP)
     novncRegistration.Check.Interval = "10s"
 
     // Register VNC endpoint
     vncRegistration := ConsulServiceRegistration{
-        Name:    fmt.Sprintf("vnc-%s", containerID[:12]),
-        ID:      fmt.Sprintf("vnc-%s", containerID[:12]),
+        Name:    fmt.Sprintf("vnc-%s", shortID),
+        ID:      fmt.Sprintf("vnc-%s", shortID),
         Address: containerIP,
         Port:    5901,
-        Tags:    []string{fmt.Sprintf("urlprefix-/%s/vnc/", containerID[:12])},
+        Tags:    []string{
+            fmt.Sprintf("urlprefix-/%s/vnc/", shortID),
+            fmt.Sprintf("strip=/%s/vnc/", shortID),
+        },
     }
     vncRegistration.Check.TCP = fmt.Sprintf("%s:5901", containerIP)
     vncRegistration.Check.Interval = "10s"
