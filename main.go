@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/shanurrahman/orchestrator/config"
 	"github.com/shanurrahman/orchestrator/docker"
-	_ "github.com/shanurrahman/orchestrator/docs"
+	"github.com/shanurrahman/orchestrator/docs"
 	"github.com/shanurrahman/orchestrator/handlers"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -34,6 +34,15 @@ func main() {
 	
 	cfg := config.Load()
 	log.Println("Configuration loaded successfully")
+	
+	// Update Swagger host and base path based on proxy configuration
+	if cfg.BehindProxy {
+		docs.SwaggerInfo.Host = "localhost:9999"
+		docs.SwaggerInfo.BasePath = "/orchestrator"
+	} else {
+		docs.SwaggerInfo.Host = "localhost:8090"
+		docs.SwaggerInfo.BasePath = "/"
+	}
 	
 	dockerClient := docker.NewDockerManager(cfg)
 	log.Println("Docker manager initialized")
